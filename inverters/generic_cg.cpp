@@ -21,10 +21,10 @@ inversion_info minv_vector_cg(double  *phi, double  *phi0, int size, int max_ite
 // CG solutions to Mphi = b 
 //  see http://en.wikipedia.org/wiki/Conjugate_gradient_method
   
+  int k;
   // Initialize vectors.
   double *r, *p, *Ap;
   double alpha, beta, rsq, rsqNew, bsqrt, truersq;
-  int k,i;
   inversion_info invif;
 
   // Allocate memory.
@@ -42,12 +42,9 @@ inversion_info minv_vector_cg(double  *phi, double  *phi0, int size, int max_ite
   // Find norm of rhs.
   bsqrt = sqrt(norm2sq<double>(phi0, size));
   
-  // 1. Compute r = b - Ax
+  // 1. Compute r = b - Ax using p as a temporary vector. 
   (*matrix_vector)(p, phi, extra_info); invif.ops_count++;
-  for (i = 0; i < size; i++)
-  {
-    r[i] = phi0[i] - p[i];
-  }
+  cxpayz(phi0, -1.0, p, r, size);
   
   // 2. p_0 = r_0.
   copy<double>(p, r, size);
@@ -62,13 +59,14 @@ inversion_info minv_vector_cg(double  *phi, double  *phi0, int size, int max_ite
   // iterate till convergence
   for(k = 0; k< max_iter; k++) {
     
+    // alpha = <r, r>/<p, Ap>
     alpha = rsq/dot<double>(p, Ap, size);
 
-    for (i = 0; i < size; i++)
-    {
-      phi[i] = phi[i] + alpha*p[i];
-      r[i] = r[i] - alpha*Ap[i];
-    }
+    // phi += alpha*p
+    caxpy(alpha, p, phi, size);
+    
+    // r -= alpha*Ap
+    caxpy(-alpha, Ap, r, size);
     
     // Exit if new residual is small enough
     rsqNew = norm2sq<double>(r, size);
@@ -84,9 +82,8 @@ inversion_info minv_vector_cg(double  *phi, double  *phi0, int size, int max_ite
     beta = rsqNew / rsq;
     rsq = rsqNew; 
     
-    for (i = 0; i < size; i++) {
-      p[i] = r[i] + beta * p[i];
-    }
+    // p = r + beta*p
+    cxpay(r, beta, p, size);
     
     // Compute the new Ap.
     (*matrix_vector)(Ap, p, extra_info); invif.ops_count++;
@@ -167,12 +164,11 @@ inversion_info minv_vector_cg(complex<double>  *phi, complex<double>  *phi0, int
 // CG solutions to Mphi = b 
 //  see http://en.wikipedia.org/wiki/Conjugate_gradient_method
 
-  
+  int k;
   // Initialize vectors.
   complex<double> *r, *p, *Ap;
   complex<double> alpha, beta, denom;
   double rsq, rsqNew, bsqrt, truersq;
-  int k,i;
   inversion_info invif;
 
   // Allocate memory.
@@ -192,10 +188,7 @@ inversion_info minv_vector_cg(complex<double>  *phi, complex<double>  *phi0, int
   
   // 1. Compute r = b - Ax
   (*matrix_vector)(p, phi, extra_info); invif.ops_count++;
-  for (i = 0; i < size; i++)
-  {
-    r[i] = phi0[i] - p[i];
-  }
+  cxpayz(phi0, -1.0, p, r, size);
   
   // 2. p_0 = r_0.
   copy<double>(p, r, size);
@@ -210,13 +203,14 @@ inversion_info minv_vector_cg(complex<double>  *phi, complex<double>  *phi0, int
   // iterate till convergence
   for(k = 0; k< max_iter; k++) {
     
+    // alpha = <r, r>/<p, Ap>
     alpha = rsq/dot<double>(p, Ap, size);
 
-    for (i = 0; i < size; i++)
-    {
-      phi[i] = phi[i] + alpha*p[i];
-      r[i] = r[i] - alpha*Ap[i];
-    }
+    // phi += alpha*p
+    caxpy(alpha, p, phi, size);
+    
+    // r -= alpha*Ap
+    caxpy(-alpha, Ap, r, size);
     
     // Exit if new residual is small enough
     rsqNew = norm2sq<double>(r, size);
@@ -232,9 +226,8 @@ inversion_info minv_vector_cg(complex<double>  *phi, complex<double>  *phi0, int
     beta = rsqNew / rsq;
     rsq = rsqNew; 
     
-    for (i = 0; i < size; i++) {
-      p[i] = r[i] + beta * p[i];
-    }
+    // p = r + beta*p
+    cxpay(r, beta, p, size);
     
     // Compute the new Ap.
     (*matrix_vector)(Ap, p, extra_info); invif.ops_count++;

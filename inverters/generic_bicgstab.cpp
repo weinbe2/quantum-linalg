@@ -10,7 +10,6 @@
 #include <sstream>
 #include <complex>
 
-#include "generic_traits.h"
 #include "generic_vector.h"
 
 #include "generic_bicgstab.h"
@@ -28,7 +27,7 @@ inversion_info minv_vector_bicgstab(double  *phi, double  *phi0, int size, int m
   double *r, *r0, *p, *Ap, *s, *As; 
   double rho, rhoNew, alpha, beta, omega;
   double rsq, bsqrt, truersq; 
-  int k,i;
+  int k;
   inversion_info invif;
 
   // Allocate memory.
@@ -56,9 +55,7 @@ inversion_info minv_vector_bicgstab(double  *phi, double  *phi0, int size, int m
   // 1. r = b - Ax. , r0 = arbitrary (use r).
   // Take advantage of initial guess in phi.
   (*matrix_vector)(Ap, phi, extra_info); invif.ops_count++;
-  for(i = 0; i<size; i++) {
-    r[i] = phi0[i] - Ap[i]; // 1. r0 = b-Ax0
-  }
+  cxpayz(phi0, -1.0, Ap, r, size); // r is a temporary
   copy<double>(r0, r, size);
   
   // 2. p = r
@@ -68,6 +65,7 @@ inversion_info minv_vector_bicgstab(double  *phi, double  *phi0, int size, int m
   rho = dot<double>(r0, r, size);
   
   // 2b. Initialize Ap.
+  zero<double>(Ap, size);
   (*matrix_vector)(Ap, p, extra_info); invif.ops_count++;
   
   // 3. iterate till convergence
@@ -77,26 +75,17 @@ inversion_info minv_vector_bicgstab(double  *phi, double  *phi0, int size, int m
     alpha = rho/dot<double>(r0, Ap, size);
     
     // 5. s = r - alpha Ap
-    for (i = 0; i < size; i++)
-    {
-      s[i] = r[i] - alpha*Ap[i];
-    }
+    cxpayz(r, -alpha, Ap, s, size);
     
     // 6. Compute As, w = <s, As>/(As, As)
     (*matrix_vector)(As, s, extra_info); invif.ops_count++;
     omega = dot<double>(As, s, size)/dot<double>(As, As, size);
     
     // 7. Update phi = phi + alpha*p + omega*s
-    for (i = 0; i < size; i++)
-    {
-      phi[i] = phi[i] + alpha*p[i] + omega*s[i];
-    }
+    caxpbypz(alpha, p, omega, s, phi, size);
     
     // 8. Update r = s - omega*As
-    for (i = 0; i < size; i++)
-    {
-      r[i] = s[i] - omega*As[i];
-    }
+    cxpayz(s, -omega, As, r, size);
     
     // 8a. If ||r|| is sufficiently small, quit.
     rsq = norm2sq<double>(r, size);
@@ -113,10 +102,8 @@ inversion_info minv_vector_bicgstab(double  *phi, double  *phi0, int size, int m
     rho = rhoNew;
     
     // 10. Update p = r + beta*p - omega*beta*Ap
-    for (i = 0; i < size; i++)
-    {
-      p[i] = r[i] + beta*(p[i] - omega*Ap[i]);
-    }
+    caxpbypcz(1.0, r, -omega*beta, Ap, beta, p, size);
+    
     zero<double>(Ap, size);
     (*matrix_vector)(Ap, p, extra_info); invif.ops_count++;
     
@@ -211,7 +198,7 @@ inversion_info minv_vector_bicgstab(complex<double>  *phi, complex<double>  *phi
   complex<double> *r, *r0, *p, *Ap, *s, *As; 
   complex<double> rho, rhoNew, alpha, beta, omega;
   double rsq, bsqrt, truersq; 
-  int k,i;
+  int k;
   inversion_info invif;
 
   // Allocate memory.
@@ -239,9 +226,7 @@ inversion_info minv_vector_bicgstab(complex<double>  *phi, complex<double>  *phi
   // 1. r = b - Ax. , r0 = arbitrary (use r).
   // Take advantage of initial guess in phi.
   (*matrix_vector)(Ap, phi, extra_info); invif.ops_count++;
-  for(i = 0; i<size; i++) {
-    r[i] = phi0[i] - Ap[i]; // 1. r0 = b-Ax0
-  }
+  cxpayz(phi0, -1.0, Ap, r, size); // r is a temporary
   copy<double>(r0, r, size);
   
   // 2. p = r
@@ -260,26 +245,17 @@ inversion_info minv_vector_bicgstab(complex<double>  *phi, complex<double>  *phi
     alpha = rho/dot<double>(r0, Ap, size);
     
     // 5. s = r - alpha Ap
-    for (i = 0; i < size; i++)
-    {
-      s[i] = r[i] - alpha*Ap[i];
-    }
+    cxpayz(r, -alpha, Ap, s, size);
     
     // 6. Compute As, w = <s, As>/(As, As)
     (*matrix_vector)(As, s, extra_info); invif.ops_count++;
     omega = dot<double>(As, s, size)/dot<double>(As, As, size);
     
     // 7. Update phi = phi + alpha*p + omega*s
-    for (i = 0; i < size; i++)
-    {
-      phi[i] = phi[i] + alpha*p[i] + omega*s[i];
-    }
+    caxpbypz(alpha, p, omega, s, phi, size);
     
     // 8. Update r = s - omega*As
-    for (i = 0; i < size; i++)
-    {
-      r[i] = s[i] - omega*As[i];
-    }
+    cxpayz(s, -omega, As, r, size);
     
     // 8a. If ||r|| is sufficiently small, quit.
     rsq = norm2sq<double>(r, size);
@@ -296,10 +272,9 @@ inversion_info minv_vector_bicgstab(complex<double>  *phi, complex<double>  *phi
     rho = rhoNew;
     
     // 10. Update p = r + beta*p - omega*beta*Ap
-    for (i = 0; i < size; i++)
-    {
-      p[i] = r[i] + beta*(p[i] - omega*Ap[i]);
-    }
+    caxpbypcz(complex<double>(1.0), r, -omega*beta, Ap, beta, p, size);
+    
+    
     zero<double>(Ap, size);
     (*matrix_vector)(Ap, p, extra_info); invif.ops_count++;
     

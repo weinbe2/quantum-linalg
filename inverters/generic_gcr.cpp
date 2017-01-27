@@ -11,7 +11,6 @@
 #include <vector>
 #include <complex>
 
-#include "generic_traits.h"
 #include "generic_vector.h"
 
 #include "generic_gcr.h"
@@ -55,10 +54,7 @@ inversion_info minv_vector_gcr(double  *phi, double  *phi0, int size, int max_it
   
   // 1. r_0 = b - Ax_0. x is phi, the initial guess.
   (*matrix_vector)(p, x, extra_info); invif.ops_count++; // Put Ax_0 into p, temp.
-  for (i = 0; i < size; i++)
-  {
-    r[i] = phi0[i] - p[i]; // r_0 = b - Ax_0
-  }
+  cxpayz(phi0, -1.0, p, r, size);
   
   // 2. p_0 = r_0.
   copy<double>(p, r, size);
@@ -77,12 +73,10 @@ inversion_info minv_vector_gcr(double  *phi, double  *phi0, int size, int max_it
     alpha = dot<double>(Ap, r, size)/norm2sq<double>(Ap, size);
     
     // 5. x = x + alpha p_k
+    caxpy(alpha, p, x, size);
+    
     // 6. r = r - alpha Ap_k
-    for (i = 0; i < size; i++)
-    {
-      x[i] = x[i] + alpha*p[i];
-      r[i] = r[i] - alpha*Ap[i];
-    }
+    caxpy(-alpha, Ap, r, size);
     
     // Compute norm.
     rsq = norm2sq<double>(r, size);
@@ -107,11 +101,8 @@ inversion_info minv_vector_gcr(double  *phi, double  *phi0, int size, int max_it
     for (ii = 0; ii <= k; ii++)
     {
       beta_ij = -dot<double>(Ap_store[ii], Ar, size)/norm2sq<double>(Ap_store[ii], size);
-      for (i = 0; i < size; i++)
-      {
-        p[i] += beta_ij*p_store[ii][i];
-        Ap[i] += beta_ij*Ap_store[ii][i]; 
-      }
+      caxpy(beta_ij, p_store[ii], p, size);
+      caxpy(beta_ij, Ap_store[ii], Ap, size);
     }
   } 
     
@@ -130,7 +121,7 @@ inversion_info minv_vector_gcr(double  *phi, double  *phi0, int size, int max_it
   // Check true residual.
   zero<double>(p,size);
   (*matrix_vector)(p,x,extra_info); invif.ops_count++;
-  for(i=0; i < size; i++) truersq += (p[i] - phi0[i])*(p[i] - phi0[i]);
+  truersq = diffnorm2sq(p, phi0, size);
   
   // Copy solution into phi.
   copy<double>(phi, x, size);
@@ -231,10 +222,7 @@ inversion_info minv_vector_gcr(complex<double>  *phi, complex<double>  *phi0, in
   
   // 1. r_0 = b - Ax_0. x is phi, the initial guess.
   (*matrix_vector)(p, x, extra_info); invif.ops_count++; // Put Ax_0 into p, temp.
-  for (i = 0; i < size; i++)
-  {
-    r[i] = phi0[i] - p[i]; // r_0 = b - Ax_0
-  }
+  cxpayz(phi0, -1.0, p, r, size);
   
   // 2. p_0 = r_0.
   copy<double>(p, r, size);
@@ -253,12 +241,10 @@ inversion_info minv_vector_gcr(complex<double>  *phi, complex<double>  *phi0, in
     alpha = dot<double>(Ap, r, size)/norm2sq<double>(Ap, size);
     
     // 5. x = x + alpha p_k
+    caxpy(alpha, p, x, size);
+    
     // 6. r = r - alpha Ap_k
-    for (i = 0; i < size; i++)
-    {
-      x[i] = x[i] + alpha*p[i];
-      r[i] = r[i] - alpha*Ap[i];
-    }
+    caxpy(-alpha, Ap, r, size);
     
     // Compute norm.
     rsq = norm2sq<double>(r, size);
@@ -283,11 +269,8 @@ inversion_info minv_vector_gcr(complex<double>  *phi, complex<double>  *phi0, in
     for (ii = 0; ii <= k; ii++)
     {
       beta_ij = -dot<double>(Ap_store[ii], Ar, size)/norm2sq<double>(Ap_store[ii], size);
-      for (i = 0; i < size; i++)
-      {
-        p[i] += beta_ij*p_store[ii][i];
-        Ap[i] += beta_ij*Ap_store[ii][i]; 
-      }
+      caxpy(beta_ij, p_store[ii], p, size);
+      caxpy(beta_ij, Ap_store[ii], Ap, size);
     }
   } 
     
@@ -306,7 +289,7 @@ inversion_info minv_vector_gcr(complex<double>  *phi, complex<double>  *phi0, in
   // Check true residual.
   zero<double>(p,size);
   (*matrix_vector)(p,x,extra_info); invif.ops_count++;
-  for(i=0; i < size; i++) truersq += real(conj(p[i] - phi0[i])*(p[i] - phi0[i]));
+  truersq = diffnorm2sq(p, phi0, size);
   
   // Copy solution into phi.
   copy<double>(phi, x, size);
