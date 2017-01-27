@@ -5,9 +5,14 @@
 #include <random>
 
 using std::complex; 
+using std::polar;
 
 #ifndef GENERIC_VECTOR
 #define GENERIC_VECTOR
+
+#ifndef PI
+#define PI 3.14159265358979323846
+#endif
 
 // Zeroes a vector.
 template<typename T> inline void zero(T* x, int size)
@@ -26,26 +31,88 @@ template <typename T> inline void zero(complex<T>* x, int size)
   }
 }
 
-// Random gaussian vector.
-template<typename T> inline void gaussian(T* x, int size, std::mt19937 &generator)
+// Assign a vector to a constant everywhere.
+template <typename T> inline void constant(T* x, T val, int size)
 {
-    // Generate a normal distribution.
-    std::normal_distribution<> dist(0.0, 1.0);
-    for (int i = 0; i < size; i++)
-    {
-        x[i] = static_cast<T>(dist(generator));
-    }
+  for (int i = 0; i < size; i++)
+  {
+    x[i] = val;
+  }
+}
+
+template <typename T> inline void constant(complex<T>* x, T val, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    x[i] = val;
+  }
+}
+
+template <typename T> inline void constant(complex<T>* x, complex<T> val, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    x[i] = val;
+  }
+}
+
+// Random gaussian vector.
+template<typename T> inline void gaussian(T* x, int size, std::mt19937 &generator, double deviation = 1.0)
+{
+  // Generate a normal distribution.
+  std::normal_distribution<> dist(0.0, deviation);
+  for (int i = 0; i < size; i++)
+  {
+    x[i] = static_cast<T>(dist(generator));
+  }
 }
 
 // Random gaussian vector, random in real and imag.
-template <typename T> inline void gaussian(complex<T>* x, int size, std::mt19937 &generator)
+template <typename T> inline void gaussian(complex<T>* x, int size, std::mt19937 &generator, double deviation = 1.0)
 {
-    // Generate a normal distribution.
-    std::normal_distribution<> dist(0.0, 1.0);
-    for (int i = 0; i < size; i++)
-    {
-        x[i] = std::complex<T>(static_cast<T>(dist(generator)), static_cast<T>(dist(generator)));
-    }
+  // Generate a normal distribution.
+  std::normal_distribution<> dist(0.0, deviation);
+  for (int i = 0; i < size; i++)
+  {
+    x[i] = std::complex<T>(static_cast<T>(dist(generator)), static_cast<T>(dist(generator)));
+  }
+}
+
+// random vector on a uniform interval.
+template <typename T> inline void random_uniform(T* x, int size, std::mt19937 &generator, T min, T max)
+{
+  std::uniform_real_distribution<> dist(min, max);
+  for (int i = 0; i < size; i++)
+  {
+    x[i] = static_cast<T>(dist(generator));
+  }
+}
+
+template <typename T> inline void random_uniform(complex<T>* x, int size, std::mt19937 &generator, T min, T max)
+{
+  std::uniform_real_distribution<> dist(min, max);
+  for (int i = 0; i < size; i++)
+  {
+    x[i] = static_cast<complex<T>>(dist(generator));
+  }
+}
+
+// vectorized polar. applies x = polar(1.0, real(x));. Ignores imag(x).
+template <typename T> inline void polar(complex<T>* x, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    x[i] = static_cast<complex<T>>(polar(1.0, real(x[i])));
+  }
+}
+
+// vectorized arg.
+template <typename T> inline void arg(complex<T>* x, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    x[i] = static_cast<complex<T>>(arg(x[i]));
+  }
 }
 
 // Copy v2 into v1.

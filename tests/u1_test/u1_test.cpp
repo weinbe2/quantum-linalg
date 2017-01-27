@@ -8,6 +8,7 @@
 
 using namespace std;
 
+#include "generic_vector.h"
 #include "u1_utils.h"
 
 int main(int argc, char** argv)
@@ -20,7 +21,7 @@ int main(int argc, char** argv)
   const int volume = x_len*y_len;
   const int gauge_volume = 2*volume;
   double beta = 3.0;
-  double alpha = 0.0; 
+  double alpha = 0.2; 
   int n_iter = 1; 
 
   std::mt19937 generator (1337u);

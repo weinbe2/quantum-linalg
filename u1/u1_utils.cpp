@@ -5,11 +5,17 @@
 #include <complex>
 #include <random>
 
-using namespace std; 
+using std::complex; 
+using std::fstream;
+using std::ios;
+using std::ios_base;
 
+#include "generic_vector.h"
 #include "u1_utils.h"
 
+#ifndef PI
 #define PI 3.14159265358979323846
+#endif
 
 // Load complex gauge field from file. 
 // Based on Rich Brower's u1 gauge routines. 
@@ -69,22 +75,15 @@ void write_gauge_u1(complex<double>* gauge_field, int x_len, int y_len, string o
 // Just set everything to 1!
 void unit_gauge_u1(complex<double>* gauge_field, int x_len, int y_len)
 {
-    for (int i = 0; i < 2*y_len*x_len; i++)
-    {
-        gauge_field[i] = 1.0;
-    }
+  constant<double>(gauge_field, 1.0, 2*x_len*y_len);
 }
 
 // Create a hot gauge field, uniformly distributed in -Pi -> Pi.
 // mt19937 can be created+seeded as: std::mt19937 generator (seed1);
 void rand_gauge_u1(complex<double>* gauge_field, int x_len, int y_len, std::mt19937 &generator)
 {
-    // Generate a uniform distribution.
-    std::uniform_real_distribution<> dist(-PI, PI);
-    for (int i = 0; i < 2*y_len*x_len; i++)
-    {
-        gauge_field[i] = polar(1.0, dist(generator));
-    }
+  random_uniform<double>(gauge_field, 2*x_len*y_len, generator, -PI, PI);
+  polar<double>(gauge_field, 2*x_len*y_len);
 }
 
 // Create a gaussian gauge field with variance = 1/beta
@@ -92,36 +91,29 @@ void rand_gauge_u1(complex<double>* gauge_field, int x_len, int y_len, std::mt19
 // Based on code by Rich Brower, re-written for C++11.
 void gauss_gauge_u1(complex<double>* gauge_field, int x_len, int y_len, std::mt19937 &generator, double beta)
 {
-    // Take abs value of beta.
-    if (beta < 0) { beta = -beta; }
-    
-    // If beta is 0, just call a hot start.
-    if (beta == 0)
-    {
-        rand_gauge_u1(gauge_field, x_len, y_len, generator);
-    }
-    
-    // Generate a normal distribution with mean 0, stddev 1/sqrt(beta)
-    std::normal_distribution<> dist(0.0, 1.0/sqrt(beta));
-    
-    // Generate fields!
-    for (int i = 0; i < 2*y_len*x_len; i++)
-    {
-        gauge_field[i] = polar(1.0, dist(generator));
-    }
-    
+  // Take abs value of beta.
+  if (beta < 0) { beta = -beta; }
+
+  // If beta is 0, just call a hot start.
+  if (beta == 0)
+  {
+    rand_gauge_u1(gauge_field, x_len, y_len, generator);
+  }
+  else
+  {
+    // create phase.
+    gaussian<double>(gauge_field, 2*y_len*x_len, generator, 1.0/sqrt(beta));
+    // promote to U(1).
+    polar<double>(gauge_field, 2*y_len*x_len);
+  } 
 }
 
 // Generate a random gauge transform.
 // mt19937 can be created+seeded as: std::mt19937 generator (seed1);
 void rand_trans_u1(complex<double>* gauge_trans, int x_len, int y_len, std::mt19937 &generator)
 {
-    // Generate a uniform distribution.
-    std::uniform_real_distribution<> dist(-PI, PI);
-    for (int i = 0; i < y_len*x_len; i++)
-    {
-        gauge_trans[i] = polar(1.0, dist(generator));
-    }
+  random_uniform<double>(gauge_trans, x_len*y_len, generator, -PI, PI);
+  polar<double>(gauge_trans, x_len*y_len);
 }
 
 // Apply a gauge transform:
@@ -148,10 +140,7 @@ void apply_ape_smear_u1(complex<double>* smeared_field, complex<double>* gauge_f
 	int i, x, y; 
 	complex<double>* smeared_tmp = new complex<double>[x_len*y_len*2];
 	
-	for (i = 0; i < x_len*y_len*2; i++)
-	{
-		smeared_tmp[i] = gauge_field[i];
-	}
+  copy<double>(smeared_tmp, gauge_field, x_len*y_len*2);
 	
 	// APE smearing: project back on U(1)
 	for (i = 0; i < n_iter; i++)
@@ -173,16 +162,12 @@ void apply_ape_smear_u1(complex<double>* smeared_field, complex<double>* gauge_f
 		}
 		
 		// Project back to U(1).
-		for (x = 0; x < x_len*y_len*2; x++)
-		{
-			smeared_tmp[x] = polar(1.0, arg(smeared_field[x]));
-		}
+    arg(smeared_field, x_len*y_len*2);
+    polar(x, x_len*y_len*2);
+    copy(smeared_tmp, smeared_field, x_len*y_len*2);
 	}
 	
-	for (i = 0; i < x_len*y_len*2; i++)
-	{
-		smeared_field[i] = smeared_tmp[i];
-	}
+  copy<double>(smeared_field, smeared_tmp, x_len*y_len*2);
 	
 	delete[] smeared_tmp; 
 }

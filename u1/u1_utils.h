@@ -9,6 +9,8 @@
 using std::complex;
 using std::string;
 
+#include "generic_vector.h"
+
 // Different gauge field types. 
 enum gauge_create_type
 {

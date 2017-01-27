@@ -11,7 +11,7 @@ EXAMPLES = u1_test
 
 CCX = g++
 #CXXFLAGS =   -std=c99 -g -O2  
-CXXFLAGS = -O2 -Wall -std=c++11 -I../../u1/
+CXXFLAGS = -O2 -Wall -std=c++11 -I../../u1/ -I../../blas/
 
 
 #  = -DHAVE_CONFIG_H -I   -g -O2  -MT
