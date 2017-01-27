@@ -3,7 +3,7 @@
 
 #============================================================
 
-C_SOURCES =  ../inverters/generic_cg.cpp ../inverters/generic_bicgstab.cpp ../inverters/generic_gcr.cpp
+C_SOURCES =  ../../inverters/generic_cg.cpp ../../inverters/generic_bicgstab.cpp ../../inverters/generic_gcr.cpp
 C_OBJS    = generic_bicgstab.o generic_cg.o generic_gcr.o
 C_INCLUDES  = generic_vector.h verbosity.h
 C_LIBS    = -lm
@@ -11,7 +11,7 @@ EXAMPLES = square_laplace
 
 CCX = g++
 #CXXFLAGS =   -std=c99 -g -O2  
-CXXFLAGS = -O2 -Wall -std=c++11 -I../inverters/ -I../verbosity/ -I../blas/
+CXXFLAGS = -O2 -Wall -std=c++11 -I../../inverters/ -I../../verbosity/ -I../../blas/
 
 
 #  = -DHAVE_CONFIG_H -I   -g -O2  -MT
