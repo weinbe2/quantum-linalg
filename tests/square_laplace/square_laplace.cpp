@@ -13,17 +13,13 @@
 #include "generic_bicgstab.h"
 #include "generic_gcr.h"
 
+#include "square_laplace.h"
+
 
 using namespace std; 
 
 // Square laplacian function.
 void square_laplacian(double* lhs, double* rhs, void* extra_data);
-
-struct laplace_struct
-{
-  int length;
-  double m_sq;
-};
 
 // Prepare vectors for various tests.
 void reset_vectors(double* rhs, double* lhs, double* check, int length)
@@ -60,12 +56,12 @@ int main(int argc, char** argv)
   // Some start-up.
   int volume = length*length;
   
-  //lattice = new double[2*volume];  // Gauge field eventually.
+  //lattice = allocate_vector<double>(2*volume);  // Gauge field eventually.
   
   // Vectors. 
-  lhs = new double[volume];
-  rhs = new double[volume];   
-  check = new double[volume];   
+  lhs = allocate_vector<double>(volume);
+  rhs = allocate_vector<double>(volume);
+  check = allocate_vector<double>(volume);   
   
   // Zero out vectors, set rhs point.
   // zero<double>(lattice, 2*volume);
@@ -139,9 +135,9 @@ int main(int argc, char** argv)
 
   // Free the lattice.
   //delete[] lattice;
-  delete[] lhs;
-  delete[] rhs;
-  delete[] check;
+  deallocate_vector(&lhs);
+  deallocate_vector(&rhs);
+  deallocate_vector(&check);
 }
 
 // Square lattice.
@@ -158,6 +154,7 @@ void square_laplacian(double* lhs, double* rhs, void* extra_data)
 
   int length = lapstr->length;
   int volume = lapstr->length*lapstr->length;
+  double m_sq = lapstr->m_sq;
   
   // For a 2D square lattice, the stencil is:
   //     |  0 -1  0 |
@@ -190,7 +187,7 @@ void square_laplacian(double* lhs, double* rhs, void* extra_data)
 
     // 0
     // Added mass term here.
-    lhs[i] = lhs[i]+(4+lapstr->m_sq)*rhs[i];
+    lhs[i] = lhs[i]+(4+m_sq)*rhs[i];
   }
 
 }

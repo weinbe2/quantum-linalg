@@ -28,9 +28,9 @@ inversion_info minv_vector_cg(double  *phi, double  *phi0, int size, int max_ite
   inversion_info invif;
 
   // Allocate memory.
-  r = new double[size];
-  p = new double[size];
-  Ap = new double[size];
+  r = allocate_vector<double>(size);
+  p = allocate_vector<double>(size);
+  Ap = allocate_vector<double>(size);
 
   // Initialize values.
   rsq = 0.0; rsqNew = 0.0; bsqrt = 0.0; truersq = 0.0; k=0;
@@ -102,9 +102,9 @@ inversion_info minv_vector_cg(double  *phi, double  *phi0, int size, int max_ite
   truersq = diffnorm2sq<double>(Ap, phi0, size);
   
   // Free all the things!
-  delete[] r;
-  delete[] p;
-  delete[] Ap;
+  deallocate_vector(&r);
+  deallocate_vector(&p);
+  deallocate_vector(&Ap);
 
   print_verbosity_summary(verb, "CG", invif.success, k, invif.ops_count, sqrt(truersq)/bsqrt);
   
@@ -172,9 +172,9 @@ inversion_info minv_vector_cg(complex<double>  *phi, complex<double>  *phi0, int
   inversion_info invif;
 
   // Allocate memory.
-  r = new complex<double>[size];
-  p = new complex<double>[size];
-  Ap = new complex<double>[size];
+  r = allocate_vector<complex<double>>(size);
+  p = allocate_vector<complex<double>>(size);
+  Ap = allocate_vector<complex<double>>(size);
 
   // Initialize values.
   rsq = 0.0; rsqNew = 0.0; bsqrt = 0.0; truersq = 0.0; k=0;
@@ -247,9 +247,9 @@ inversion_info minv_vector_cg(complex<double>  *phi, complex<double>  *phi0, int
   truersq = diffnorm2sq<double>(Ap, phi0, size);
   
   // Free all the things!
-  delete[] r;
-  delete[] p;
-  delete[] Ap;
+  deallocate_vector(&r);
+  deallocate_vector(&p);
+  deallocate_vector(&Ap);
 
   
   print_verbosity_summary(verb, "CG", invif.success, k, invif.ops_count, sqrt(truersq)/bsqrt);

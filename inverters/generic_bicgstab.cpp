@@ -31,12 +31,12 @@ inversion_info minv_vector_bicgstab(double  *phi, double  *phi0, int size, int m
   inversion_info invif;
 
   // Allocate memory.
-  r = new double[size];
-  r0 = new double[size];
-  p = new double[size];
-  Ap = new double[size];
-  s = new double[size];
-  As = new double[size];
+  r = allocate_vector<double>(size);
+  r0 = allocate_vector<double>(size);
+  p = allocate_vector<double>(size);
+  Ap = allocate_vector<double>(size);
+  s = allocate_vector<double>(size);
+  As = allocate_vector<double>(size);
   
   // Zero vectors. 
   zero<double>(r, size);
@@ -126,12 +126,12 @@ inversion_info minv_vector_bicgstab(double  *phi, double  *phi0, int size, int m
   truersq = diffnorm2sq<double>(Ap, phi0, size);
   
   // Free all the things!
-  delete[] r;
-  delete[] r0;
-  delete[] p;
-  delete[] Ap; 
-  delete[] s;
-  delete[] As;
+  deallocate_vector(&r);
+  deallocate_vector(&r0);
+  deallocate_vector(&p);
+  deallocate_vector(&Ap);
+  deallocate_vector(&s);
+  deallocate_vector(&As);
   
   print_verbosity_summary(verb, "BiCGStab", invif.success, k, invif.ops_count, sqrt(truersq)/bsqrt);
 
@@ -202,12 +202,12 @@ inversion_info minv_vector_bicgstab(complex<double>  *phi, complex<double>  *phi
   inversion_info invif;
 
   // Allocate memory.
-  r = new complex<double>[size];
-  r0 = new complex<double>[size];
-  p = new complex<double>[size];
-  Ap = new complex<double>[size];
-  s = new complex<double>[size];
-  As = new complex<double>[size];
+  r = allocate_vector<complex<double>>(size);
+  r0 = allocate_vector<complex<double>>(size);
+  p = allocate_vector<complex<double>>(size);
+  Ap = allocate_vector<complex<double>>(size);
+  s = allocate_vector<complex<double>>(size);
+  As = allocate_vector<complex<double>>(size);
   
   // Zero vectors. 
   zero<double>(r, size);
@@ -297,12 +297,12 @@ inversion_info minv_vector_bicgstab(complex<double>  *phi, complex<double>  *phi
   truersq = diffnorm2sq<double>(Ap, phi0, size);
   
   // Free all the things!
-  delete[] r;
-  delete[] r0;
-  delete[] p;
-  delete[] Ap; 
-  delete[] s;
-  delete[] As;
+  deallocate_vector(&r);
+  deallocate_vector(&r0);
+  deallocate_vector(&p);
+  deallocate_vector(&Ap);
+  deallocate_vector(&s);
+  deallocate_vector(&As);
   
   print_verbosity_summary(verb, "BiCGStab", invif.success, k, invif.ops_count, sqrt(truersq)/bsqrt);
 

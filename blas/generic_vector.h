@@ -14,6 +14,18 @@ using std::polar;
 #define PI 3.14159265358979323846
 #endif
 
+// Create and destroy a vector.
+template<typename T> inline T* allocate_vector(int size)
+{
+  return new T[size];
+}
+
+template<typename T> inline void deallocate_vector(T** x)
+{
+  delete[] *x;
+  *x = 0;
+}
+
 // Zeroes a vector.
 template<typename T> inline void zero(T* x, int size)
 {
