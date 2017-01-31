@@ -14,7 +14,7 @@ using std::stringstream;
 
 
 #include "inverter_struct.h"
-#include "verbosity.h"
+#include "../verbosity/verbosity.h"
 
 
 inversion_info minv_vector_bicgstab(double  *phi, double  *phi0, int size, int max_iter, double res, void (*matrix_vector)(double*,double*,void*), void* extra_info, inversion_verbose_struct* verbosity = 0);

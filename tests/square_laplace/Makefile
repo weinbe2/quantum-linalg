@@ -12,7 +12,7 @@ C_EXAMPLES_OBJ = square_laplace.o
 
 CCX = g++
 #CXXFLAGS =   -std=c99 -g -O2  
-CXXFLAGS = -O2 -Wall -std=c++11 -I../../inverters/ -I../../verbosity/ -I../../blas/
+CXXFLAGS = -O2 -Wall -std=c++11 -I../../
 
 
 #  = -DHAVE_CONFIG_H -I   -g -O2  -MT

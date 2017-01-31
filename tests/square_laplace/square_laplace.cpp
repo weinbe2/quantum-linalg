@@ -7,11 +7,11 @@
 #include <sstream>
 #include <complex>
 
-#include "generic_vector.h"
+#include "blas/generic_vector.h"
 
-#include "generic_cg.h"
-#include "generic_bicgstab.h"
-#include "generic_gcr.h"
+#include "inverters/generic_cg.h"
+#include "inverters/generic_bicgstab.h"
+#include "inverters/generic_gcr.h"
 
 #include "square_laplace.h"
 

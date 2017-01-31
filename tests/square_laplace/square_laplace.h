@@ -4,8 +4,6 @@
 #ifndef SQUARE_LAPLACE_HEADER
 #define SQUARE_LAPLACE_HEADER
 
-#include "generic_vector.h"
-
 struct laplace_struct
 {
   int length;
