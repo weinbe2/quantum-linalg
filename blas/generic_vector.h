@@ -212,6 +212,31 @@ template<typename T> inline void cxpay(complex<T>* x, complex<T> a, complex<T>* 
   }
 }
 
+// Implement caxpby, y = a*x + b*y
+template<typename T> inline void caxpby(T a, T* x, T b, T* y, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    y[i] = a*x[i] + b*y[i];
+  }
+}
+
+template<typename T> inline void caxpby(T a, complex<T>* x, T b, complex<T>* y, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    y[i] = a*x[i] + b*y[i];
+  }
+}
+
+template<typename T> inline void caxpby(complex<T> a, complex<T>* x, complex<T> b, complex<T>* y, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    y[i] = a*x[i] + b*y[i];
+  }
+}
+
 // Implement cxpayz, z = x + a*y
 template<typename T> inline void cxpayz(T* x, T a, T* y, T* z, int size)
 {
