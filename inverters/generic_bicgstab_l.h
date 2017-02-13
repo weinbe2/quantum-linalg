@@ -64,20 +64,20 @@ inversion_info minv_vector_bicgstab_l(double  *phi, double  *phi0, int size, int
   }
   
   // Zero vectors. 
-  zero<double>(r0, size);
+  zero_vector(r0, size);
   for (i = 0; i < l+1; i++)
   {
-    zero<double>(r[i], size);
-    zero<double>(u[i], size);
+    zero_vector(r[i], size);
+    zero_vector(u[i], size);
   }
   
-  zero<double>(sigma, l+1);
-  zero<double>(gamma, l+1);
-  zero<double>(gamma_prime, l+1);
-  zero<double>(gamma_prime_prime, l+1);
+  zero_vector(sigma, l+1);
+  zero_vector(gamma, l+1);
+  zero_vector(gamma_prime, l+1);
+  zero_vector(gamma_prime_prime, l+1);
   for (i = 0; i < l+1; i++)
   {
-    zero<double>(tau[i], l+1);
+    zero_vector(tau[i], l+1);
   }
 
   // Initialize values.
@@ -87,17 +87,17 @@ inversion_info minv_vector_bicgstab_l(double  *phi, double  *phi0, int size, int
   omega = 1; 
   
   // Find norm of rhs.
-  bsqrt = sqrt(norm2sq<double>(phi0, size));
+  bsqrt = sqrt(norm2sq(phi0, size));
 
   // 1. r[0]0 = b - Ax. r0 = r[0]. sigma[0] = ||r[0]||^2
   // Take advantage of initial guess in phi. Use u[0] as a tmp.
-  zero<double>(u[0], size); 
+  zero_vector(u[0], size); 
   (*matrix_vector)(u[0], phi, extra_info); invif.ops_count++;
   cxpayz(phi0, -1.0, u[0], r[0], size); // r0 = b - Ax0, phi0 -> b, u[0] -> Ax0.
   
-  sigma[0] = norm2sq<double>(r[0], size);
-  copy<double>(r0, r[0], size);
-  zero<double>(u[0], size);
+  sigma[0] = norm2sq(r[0], size);
+  copy_vector(r0, r[0], size);
+  zero_vector(u[0], size);
   
   
   // 2. iterate till convergence
@@ -112,7 +112,7 @@ inversion_info minv_vector_bicgstab_l(double  *phi, double  *phi0, int size, int
     for (j = 0; j < l; j++)
     {
       // rho1 = <r0, r_j>, beta = alpha*rho1/rho0, rho0 = rho1
-      rho1 = dot<double>(r0, r[j], size);
+      rho1 = dot(r0, r[j], size);
       beta = alpha*rho1/rho0;
       rho0 = rho1;
       // for i = 0 .. j, u[i] = r[i] - beta*u[i];
@@ -121,11 +121,11 @@ inversion_info minv_vector_bicgstab_l(double  *phi, double  *phi0, int size, int
         cxpay(r[i], -beta, u[i], size);
       }
       // u[j+1] = A u[j];
-      zero<double>(u[j+1], size); 
+      zero_vector(u[j+1], size); 
       (*matrix_vector)(u[j+1], u[j], extra_info); invif.ops_count++;
       
       // alpha = rho0/<r0, u[j+1]>
-      alpha = rho0/dot<double>(r0, u[j+1], size);
+      alpha = rho0/dot(r0, u[j+1], size);
       
       // for i = 0 .. j, r[i] = r[i] - alpha u[i+1]
       for (i = 0; i <= j; i++)
@@ -147,15 +147,15 @@ inversion_info minv_vector_bicgstab_l(double  *phi, double  *phi0, int size, int
       for (i = 1; i < j; i++)
       {
         // tau_ij = <r_i,r_j>/sigma_i
-        tau[i][j] = dot<double>(r[i], r[j], size)/sigma[i];
+        tau[i][j] = dot(r[i], r[j], size)/sigma[i];
         
         // r_j = r_j - tau_ij r[i];
         caxpy(-tau[i][j], r[i], r[j], size);
       }
         
       // sigma_j = r_j^2, gamma'_j = <r_0, r_j>/sigma_j
-      sigma[j] = norm2sq<double>(r[j], size);
-      gamma_prime[j] = dot<double>(r[j],r[0], size)/sigma[j];
+      sigma[j] = norm2sq(r[j], size);
+      gamma_prime[j] = dot(r[j],r[0], size)/sigma[j];
     }
         
     // gamma[l] = gamma'_l, omega = gamma[l]
@@ -196,7 +196,7 @@ inversion_info minv_vector_bicgstab_l(double  *phi, double  *phi0, int size, int
     }
     
     // sigma[0] = r_0^2. This is rsq in my other codes. 
-    sigma[0] = norm2sq<double>(r[0], size);
+    sigma[0] = norm2sq(r[0], size);
     print_verbosity_resid(verb, ss.str(), k+l, invif.ops_count, sqrt(sigma[0])/bsqrt);
     
     // Check for convergence.
@@ -221,7 +221,7 @@ inversion_info minv_vector_bicgstab_l(double  *phi, double  *phi0, int size, int
   
   // Check the true residual. Use u[0] as a tmp.
   (*matrix_vector)(u[0],phi,extra_info); invif.ops_count++; 
-  truersq = diffnorm2sq<double>(u[0], phi0, size);
+  truersq = diffnorm2sq(u[0], phi0, size);
   
   // Free all the things!
   deallocate_vector(&r0);
@@ -259,7 +259,7 @@ inversion_info minv_vector_bicgstab_l_restart(double  *phi, double  *phi0, int s
   int iter; // counts total number of iterations.
   int ops_count;
   inversion_info invif;
-  double bsqrt = sqrt(norm2sq<double>(phi0, size));
+  double bsqrt = sqrt(norm2sq(phi0, size));
   
   inversion_verbose_struct verb_rest;
   shuffle_verbosity_restart(&verb_rest, verb);
@@ -332,20 +332,20 @@ inversion_info minv_vector_bicgstab_l(complex<double>  *phi, complex<double>  *p
   }
   
   // Zero vectors. 
-  zero<double>(r0, size);
+  zero_vector(r0, size);
   for (i = 0; i < l+1; i++)
   {
-    zero<double>(r[i], size);
-    zero<double>(u[i], size);
+    zero_vector(r[i], size);
+    zero_vector(u[i], size);
   }
   
-  zero<double>(sigma, l+1);
-  zero<double>(gamma, l+1);
-  zero<double>(gamma_prime, l+1);
-  zero<double>(gamma_prime_prime, l+1);
+  zero_vector(sigma, l+1);
+  zero_vector(gamma, l+1);
+  zero_vector(gamma_prime, l+1);
+  zero_vector(gamma_prime_prime, l+1);
   for (i = 0; i < l+1; i++)
   {
-    zero<double>(tau[i], l+1);
+    zero_vector(tau[i], l+1);
   }
 
   // Initialize values.
@@ -355,16 +355,16 @@ inversion_info minv_vector_bicgstab_l(complex<double>  *phi, complex<double>  *p
   omega = 1; 
   
   // Find norm of rhs.
-  bsqrt = sqrt(norm2sq<double>(phi0, size));
+  bsqrt = sqrt(norm2sq(phi0, size));
 
   // 1. r[0]0 = b - Ax. r0 = r[0]. sigma[0] = ||r[0]||^2
   // Take advantage of initial guess in phi. Use u[0] as a tmp.
-  zero<double>(u[0], size); 
+  zero_vector(u[0], size); 
   (*matrix_vector)(u[0], phi, extra_info); invif.ops_count++;
   cxpayz(phi0, -1.0, u[0], r[0], size); // r0 = b - Ax0, phi0 -> b, u[0] -> Ax0.
-  sigma[0] = norm2sq<double>(r[0], size);
-  copy<double>(r0, r[0], size);
-  zero<double>(u[0], size);
+  sigma[0] = norm2sq(r[0], size);
+  copy_vector(r0, r[0], size);
+  zero_vector(u[0], size);
   
   
   // 2. iterate till convergence
@@ -379,7 +379,7 @@ inversion_info minv_vector_bicgstab_l(complex<double>  *phi, complex<double>  *p
     for (j = 0; j < l; j++)
     {
       // rho1 = <r0, r_j>, beta = alpha*rho1/rho0, rho0 = rho1
-      rho1 = dot<double>(r0, r[j], size);
+      rho1 = dot(r0, r[j], size);
       beta = alpha*rho1/rho0;
       rho0 = rho1;
       // for i = 0 .. j, u[i] = r[i] - beta*u[i];
@@ -388,11 +388,11 @@ inversion_info minv_vector_bicgstab_l(complex<double>  *phi, complex<double>  *p
         cxpay(r[i], -beta, u[i], size);
       }
       // u[j+1] = A u[j];
-      zero<double>(u[j+1], size); 
+      zero_vector(u[j+1], size); 
       (*matrix_vector)(u[j+1], u[j], extra_info); invif.ops_count++;
       
       // alpha = rho0/<r0, u[j+1]>
-      alpha = rho0/dot<double>(r0, u[j+1], size);
+      alpha = rho0/dot(r0, u[j+1], size);
       
       // for i = 0 .. j, r[i] = r[i] - alpha u[i+1]
       for (i = 0; i <= j; i++)
@@ -414,15 +414,15 @@ inversion_info minv_vector_bicgstab_l(complex<double>  *phi, complex<double>  *p
       for (i = 1; i < j; i++)
       {
         // tau_ij = <r_i,r_j>/sigma_i
-        tau[i][j] = dot<double>(r[i], r[j], size)/sigma[i];
+        tau[i][j] = dot(r[i], r[j], size)/sigma[i];
         
         // r_j = r_j - tau_ij r[i];
         caxpy(-tau[i][j], r[i], r[j], size);
       }
         
       // sigma_j = r_j^2, gamma'_j = <r_0, r_j>/sigma_j
-      sigma[j] = norm2sq<double>(r[j], size);
-      gamma_prime[j] = dot<double>(r[j],r[0], size)/sigma[j];
+      sigma[j] = norm2sq(r[j], size);
+      gamma_prime[j] = dot(r[j],r[0], size)/sigma[j];
     }
         
     // gamma[l] = gamma'_l, omega = gamma[l]
@@ -463,7 +463,7 @@ inversion_info minv_vector_bicgstab_l(complex<double>  *phi, complex<double>  *p
     }
     
     // sigma[0] = r_0^2. This is rsq in my other codes. 
-    sigma[0] = norm2sq<double>(r[0], size);
+    sigma[0] = norm2sq(r[0], size);
     print_verbosity_resid(verb, ss.str(), k+l, invif.ops_count, sqrt(sigma[0])/bsqrt);
     
     // Check for convergence.
@@ -488,7 +488,7 @@ inversion_info minv_vector_bicgstab_l(complex<double>  *phi, complex<double>  *p
   
   // Check the true residual. Use u[0] as a tmp.
   (*matrix_vector)(u[0],phi,extra_info); invif.ops_count++; 
-  truersq = diffnorm2sq<double>(u[0], phi0, size);
+  truersq = diffnorm2sq(u[0], phi0, size);
   
   // Free all the things!
   deallocate_vector(&r0);
@@ -526,7 +526,7 @@ inversion_info minv_vector_bicgstab_l_restart(complex<double>  *phi, complex<dou
   int iter; // counts total number of iterations.
   int ops_count;
   inversion_info invif;
-  double bsqrt = sqrt(norm2sq<double>(phi0, size));
+  double bsqrt = sqrt(norm2sq(phi0, size));
   
   inversion_verbose_struct verb_rest;
   shuffle_verbosity_restart(&verb_rest, verb);

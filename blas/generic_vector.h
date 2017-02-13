@@ -27,46 +27,24 @@ template<typename T> inline void deallocate_vector(T** x)
 }
 
 // Zeroes a vector.
-template<typename T> inline void zero(T* x, int size)
+template<typename T> inline void zero_vector(T* x, int size)
 {
    for (int i = 0; i < size; i++)
    {
-      x[i] = 0.0;
+      x[i] = static_cast<T>(0.0);
    }
 }
 
-template <typename T> inline void zero(complex<T>* x, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    x[i] = 0.0;
-  }
-}
 
 // Assign a vector to a constant everywhere.
-template <typename T> inline void constant(T* x, T val, int size)
+template <typename T, typename U = T> inline void constant_vector(T* x, U val, int size)
 {
   for (int i = 0; i < size; i++)
   {
-    x[i] = val;
+    x[i] = static_cast<T>(val);
   }
 }
 
-template <typename T> inline void constant(complex<T>* x, T val, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    x[i] = val;
-  }
-}
-
-template <typename T> inline void constant(complex<T>* x, complex<T> val, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    x[i] = val;
-  }
-}
 
 // Random gaussian vector.
 template<typename T> inline void gaussian(T* x, int size, std::mt19937 &generator, double deviation = 1.0)
@@ -128,15 +106,7 @@ template <typename T> inline void arg(complex<T>* x, int size)
 }
 
 // Copy v2 into v1.
-template<typename T> inline void copy(T* v1, T* v2, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    v1[i] = v2[i];
-  }
-}
-
-template<typename T> inline void copy(complex<T>* v1, complex<T>* v2, int size)
+template<typename T> inline void copy_vector(T* v1, T* v2, int size)
 {
   for (int i = 0; i < size; i++)
   {
@@ -153,33 +123,8 @@ template<typename T> inline void cxpy(T* x, T* y, int size)
   }
 }
 
-// Implement cxpy, v2 += v1.
-template<typename T> inline void cxpy(complex<T>* x, complex<T>* y, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    y[i] += x[i];
-  }
-}
-
 // Implement caxpy, y += a*x
-template<typename T> inline void caxpy(T a, T* x, T* y, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    y[i] += a*x[i];
-  }
-}
-
-template<typename T> inline void caxpy(T a, complex<T>* x, complex<T>* y, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    y[i] += a*x[i];
-  }
-}
-
-template<typename T> inline void caxpy(complex<T> a, complex<T>* x, complex<T>* y, int size)
+template<typename T, typename U = T> inline void caxpy(U a, T* x, T* y, int size)
 {
   for (int i = 0; i < size; i++)
   {
@@ -188,23 +133,7 @@ template<typename T> inline void caxpy(complex<T> a, complex<T>* x, complex<T>* 
 }
 
 // Implement cxpay, y = x + a*y
-template<typename T> inline void cxpay(T* x, T a, T* y, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    y[i] = x[i] + a*y[i];
-  }
-}
-
-template<typename T> inline void cxpay(complex<T>* x, T a, complex<T>* y, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    y[i] = x[i] + a*y[i];
-  }
-}
-
-template<typename T> inline void cxpay(complex<T>* x, complex<T> a, complex<T>* y, int size)
+template<typename T, typename U = T> inline void cxpay(T* x, U a, T* y, int size)
 {
   for (int i = 0; i < size; i++)
   {
@@ -213,23 +142,7 @@ template<typename T> inline void cxpay(complex<T>* x, complex<T> a, complex<T>* 
 }
 
 // Implement caxpby, y = a*x + b*y
-template<typename T> inline void caxpby(T a, T* x, T b, T* y, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    y[i] = a*x[i] + b*y[i];
-  }
-}
-
-template<typename T> inline void caxpby(T a, complex<T>* x, T b, complex<T>* y, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    y[i] = a*x[i] + b*y[i];
-  }
-}
-
-template<typename T> inline void caxpby(complex<T> a, complex<T>* x, complex<T> b, complex<T>* y, int size)
+template<typename T, typename U = T> inline void caxpby(U a, T* x, U b, T* y, int size)
 {
   for (int i = 0; i < size; i++)
   {
@@ -238,23 +151,7 @@ template<typename T> inline void caxpby(complex<T> a, complex<T>* x, complex<T> 
 }
 
 // Implement cxpayz, z = x + a*y
-template<typename T> inline void cxpayz(T* x, T a, T* y, T* z, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    z[i] = x[i] + a*y[i];
-  }
-}
-
-template<typename T> inline void cxpayz(complex<T>* x, T a, complex<T>* y, complex<T>* z, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    z[i] = x[i] + a*y[i];
-  }
-}
-
-template<typename T> inline void cxpayz(complex<T>* x, complex<T> a, complex<T>* y, complex<T>* z, int size)
+template<typename T, typename U = T> inline void cxpayz(T* x, U a, T* y, T* z, int size)
 {
   for (int i = 0; i < size; i++)
   {
@@ -263,22 +160,7 @@ template<typename T> inline void cxpayz(complex<T>* x, complex<T> a, complex<T>*
 }
 
 // Implement caxpbypz, z += a*x + b*y
-template<typename T> inline void caxpbypz(T a, T* x, T b, T* y, T* z, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    z[i] += a*x[i] + b*y[i];
-  }
-}
-
-template<typename T> inline void caxpbypz(T a, complex<T>* x, T b, complex<T>* y, complex<T>* z, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    z[i] += a*x[i] + b*y[i];
-  }
-}
-template<typename T> inline void caxpbypz(complex<T> a, complex<T>* x, complex<T> b, complex<T>* y, complex<T>* z, int size)
+template<typename T, typename U = T> inline void caxpbypz(U a, T* x, U b, T* y, T* z, int size)
 {
   for (int i = 0; i < size; i++)
   {
@@ -287,7 +169,7 @@ template<typename T> inline void caxpbypz(complex<T> a, complex<T>* x, complex<T
 }
 
 // Implement caxpbypcz, z = a*x + b*y + cz
-template<typename T> inline void caxpbypcz(T a, T* x, T b, T* y, T c, T* z, int size)
+template<typename T, typename U = T> inline void caxpbypcz(U a, T* x, U b, T* y, U c, T* z, int size)
 {
   for (int i = 0; i < size; i++)
   {
@@ -295,42 +177,9 @@ template<typename T> inline void caxpbypcz(T a, T* x, T b, T* y, T c, T* z, int 
   }
 }
 
-template<typename T> inline void caxpbypcz(T a, complex<T>* x, T b, complex<T>* y, T c, complex<T>* z, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    z[i] = a*x[i] + b*y[i] + c*z[i];
-  }
-}
-
-template<typename T> inline void caxpbypcz(complex<T> a, complex<T>* x, complex<T> b, complex<T>* y, complex<T> c, complex<T>* z, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    z[i] = a*x[i] + b*y[i] + c*z[i];
-  }
-}
 
 // Implement caxpyBzpx, y += a*x THEN x += b*z. 
-template<typename T> inline void caxpyBzpx(T a, T* x, T* y, T b, T* z, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    y[i] += a*x[i];
-    x[i] += b*z[i];
-  }
-}
-
-template<typename T> inline void caxpyBzpx(T a, complex<T>* x, complex<T>* y, T b, complex<T>* z, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    y[i] += a*x[i];
-    x[i] += b*z[i];
-  }
-}
-
-template<typename T> inline void caxpyBzpx(complex<T> a, complex<T>* x, complex<T>* y, complex<T> b, complex<T>* z, int size)
+template<typename T, typename U = T> inline void caxpyBzpx(U a, T* x, T* y, U b, T* z, int size)
 {
   for (int i = 0; i < size; i++)
   {
@@ -340,25 +189,7 @@ template<typename T> inline void caxpyBzpx(complex<T> a, complex<T>* x, complex<
 }
 
 // Implement caxpyBxpz, y += a*x, z += b*x
-template<typename T> inline void caxpyBxpz(T a, T* x, T* y, T b, T* z, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    y[i] += a*x[i];
-    z[i] += b*x[i];
-  }
-}
-
-template<typename T> inline void caxpyBxpz(T a, complex<T>* x, complex<T>* y, T b, complex<T>* z, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    y[i] += a*x[i];
-    z[i] += b*x[i];
-  }
-}
-
-template<typename T> inline void caxpyBxpz(complex<T> a, complex<T>* x, complex<T>* y, complex<T> b, complex<T>* z, int size)
+template<typename T, typename U = T> inline void caxpyBxpz(U a, T* x, T* y, U b, T* z, int size)
 {
   for (int i = 0; i < size; i++)
   {
@@ -387,6 +218,28 @@ template <typename T> inline complex<T> dot(complex<T>* v1, complex<T>* v2, int 
     res = res + conj(v1[i])*v2[i];
   }
   return res;
+}
+
+// Computes re(conj(v1) dot v2)
+// trivial
+template <typename T> inline T re_dot(T* v1, T* v2, int size)
+{
+  T res = static_cast<T>(0.0);
+  for (int i = 0; i < size; i++)
+  {
+    res = res + v1[i]*v2[i];
+  }
+  return res;
+}
+
+template <typename T> inline T re_dot(complex<T>* v1, complex<T>* v2, int size)
+{
+  complex<T> res = static_cast<T>(0.0);
+  for (int i = 0; i < size; i++)
+  {
+    res = res + conj(v1[i])*v2[i];
+  }
+  return real(res);
 }
 
 // Computes the vector norm squared.

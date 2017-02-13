@@ -43,31 +43,31 @@ inversion_info minv_vector_cg(double  *phi, double  *phi0, int size, int max_ite
   rsq = 0.0; rsqNew = 0.0; bsqrt = 0.0; truersq = 0.0; k=0;
 
   // Zero vectors;
-  zero<double>(r, size); 
-  zero<double>(p, size); zero<double>(Ap, size);
+  zero_vector(r, size); 
+  zero_vector(p, size); zero_vector(Ap, size);
   
   // Find norm of rhs.
-  bsqrt = sqrt(norm2sq<double>(phi0, size));
+  bsqrt = sqrt(norm2sq(phi0, size));
   
   // 1. Compute r = b - Ax using p as a temporary vector. 
   (*matrix_vector)(p, phi, extra_info); invif.ops_count++;
   cxpayz(phi0, -1.0, p, r, size);
   
   // 2. p_0 = r_0.
-  copy<double>(p, r, size);
+  copy_vector(p, r, size);
   
   // Compute Ap.
-  zero<double>(Ap, size);
+  zero_vector(Ap, size);
   (*matrix_vector)(Ap, p, extra_info); invif.ops_count++;
   
   // Compute rsq.
-  rsq = norm2sq<double>(r, size);
+  rsq = norm2sq(r, size);
 
   // iterate till convergence
   for(k = 0; k< max_iter; k++) {
     
     // alpha = <r, r>/<p, Ap>
-    alpha = rsq/dot<double>(p, Ap, size);
+    alpha = rsq/re_dot(p, Ap, size);
 
     // phi += alpha*p
     caxpy(alpha, p, phi, size);
@@ -76,7 +76,7 @@ inversion_info minv_vector_cg(double  *phi, double  *phi0, int size, int max_ite
     caxpy(-alpha, Ap, r, size);
     
     // Exit if new residual is small enough
-    rsqNew = norm2sq<double>(r, size);
+    rsqNew = norm2sq(r, size);
     
     print_verbosity_resid(verb, "CG", k+1, invif.ops_count, sqrt(rsqNew)/bsqrt); 
 
@@ -106,7 +106,7 @@ inversion_info minv_vector_cg(double  *phi, double  *phi0, int size, int max_ite
   k++;
   
   (*matrix_vector)(Ap,phi,extra_info); invif.ops_count++;
-  truersq = diffnorm2sq<double>(Ap, phi0, size);
+  truersq = diffnorm2sq(Ap, phi0, size);
   
   // Free all the things!
   deallocate_vector(&r);
@@ -128,7 +128,7 @@ inversion_info minv_vector_cg_restart(double  *phi, double  *phi0, int size, int
   int iter; // counts total number of iterations.
   int ops_count; 
   inversion_info invif;
-  double bsqrt = sqrt(norm2sq<double>(phi0, size));
+  double bsqrt = sqrt(norm2sq(phi0, size));
   
   inversion_verbose_struct verb_rest;
   shuffle_verbosity_restart(&verb_rest, verb);
@@ -174,7 +174,8 @@ inversion_info minv_vector_cg(complex<double>  *phi, complex<double>  *phi0, int
   int k;
   // Initialize vectors.
   complex<double> *r, *p, *Ap;
-  complex<double> alpha, beta, denom;
+  double alpha, beta;
+  complex<double> denom;
   double rsq, rsqNew, bsqrt, truersq;
   inversion_info invif;
 
@@ -187,31 +188,31 @@ inversion_info minv_vector_cg(complex<double>  *phi, complex<double>  *phi0, int
   rsq = 0.0; rsqNew = 0.0; bsqrt = 0.0; truersq = 0.0; k=0;
 
   // Zero vectors;
-  zero<double>(r, size); 
-  zero<double>(p, size); zero<double>(Ap, size);
+  zero_vector(r, size); 
+  zero_vector(p, size); zero_vector(Ap, size);
   
   // Find norm of rhs.
-  bsqrt = sqrt(norm2sq<double>(phi0, size));
+  bsqrt = sqrt(norm2sq(phi0, size));
   
   // 1. Compute r = b - Ax
   (*matrix_vector)(p, phi, extra_info); invif.ops_count++;
   cxpayz(phi0, -1.0, p, r, size);
   
   // 2. p_0 = r_0.
-  copy<double>(p, r, size);
+  copy_vector(p, r, size);
   
   // Compute Ap.
-  zero<double>(Ap, size);
+  zero_vector(Ap, size);
   (*matrix_vector)(Ap, p, extra_info); invif.ops_count++;
   
   // Compute rsq.
-  rsq = norm2sq<double>(r, size);
+  rsq = norm2sq(r, size);
 
   // iterate till convergence
   for(k = 0; k< max_iter; k++) {
     
     // alpha = <r, r>/<p, Ap>
-    alpha = rsq/dot<double>(p, Ap, size);
+    alpha = rsq/re_dot(p, Ap, size);
 
     // phi += alpha*p
     caxpy(alpha, p, phi, size);
@@ -220,7 +221,7 @@ inversion_info minv_vector_cg(complex<double>  *phi, complex<double>  *phi0, int
     caxpy(-alpha, Ap, r, size);
     
     // Exit if new residual is small enough
-    rsqNew = norm2sq<double>(r, size);
+    rsqNew = norm2sq(r, size);
       
     print_verbosity_resid(verb, "CG", k+1, invif.ops_count, sqrt(rsqNew)/bsqrt);
 
@@ -251,7 +252,7 @@ inversion_info minv_vector_cg(complex<double>  *phi, complex<double>  *phi0, int
   k++; 
   
   (*matrix_vector)(Ap,phi,extra_info); invif.ops_count++;
-  truersq = diffnorm2sq<double>(Ap, phi0, size);
+  truersq = diffnorm2sq(Ap, phi0, size);
   
   // Free all the things!
   deallocate_vector(&r);
@@ -276,7 +277,7 @@ inversion_info minv_vector_cg_restart(complex<double>  *phi, complex<double>  *p
   int iter; // counts total number of iterations.
   int ops_count; 
   inversion_info invif;
-  double bsqrt = sqrt(norm2sq<double>(phi0, size));
+  double bsqrt = sqrt(norm2sq(phi0, size));
   
   inversion_verbose_struct verb_rest;
   shuffle_verbosity_restart(&verb_rest, verb);

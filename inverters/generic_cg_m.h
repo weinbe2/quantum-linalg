@@ -1,4 +1,4 @@
-// Wed Aug 24 15:46:50 EDT 2016
+// Copyright (c) 2017 Evan S Weinberg
 // Multshift CG inverter.
 // Solves lhs[i] = (A+shift[i])^(-1) rhs with CG, solving
 //   for all shifts at once. 
@@ -82,11 +82,11 @@ inversion_info minv_vector_cg_m(double **phi, double *phi0, int n_shift, int siz
   beta = 1.0; alpha = 0.0;
 
   // Zero vectors;
-  zero<double>(r, size); 
-  zero<double>(p, size); zero<double>(Ap, size);
+  zero_vector(r, size); 
+  zero_vector(p, size); zero_vector(Ap, size);
   
   // Find norm of rhs.
-  bsqrt = sqrt(norm2sq<double>(phi0, size));
+  bsqrt = sqrt(norm2sq(phi0, size));
   
   // There can't be an initial guess... though it is sort of possible, in reference to:
   // http://arxiv.org/pdf/0810.1081v1.pdf
@@ -94,25 +94,25 @@ inversion_info minv_vector_cg_m(double **phi, double *phi0, int n_shift, int siz
   // 1. x_sigma = 0, r = p_sigma = b.
   for (n = 0; n < n_shift; n++)
   {
-    copy<double>(p_s[n], phi0, size);
-    zero<double>(phi[n], size);
+    copy_vector(p_s[n], phi0, size);
+    zero_vector(phi[n], size);
   }
-  copy<double>(p, phi0, size);
-  copy<double>(r, phi0, size);
+  copy_vector(p, phi0, size);
+  copy_vector(r, phi0, size);
   
   // Compute Ap.
-  zero<double>(Ap, size);
+  zero_vector(Ap, size);
   (*matrix_vector)(Ap, p, extra_info); invif.ops_count++;
   
   // Compute rsq.
-  rsq = norm2sq<double>(r, size);
+  rsq = norm2sq(r, size);
 
   // iterate till convergence
   for(k = 0; k< max_iter; k++) {
     
     // 2. beta_i = - rsq / pAp. Which is a weird switch from the normal notation, but whatever.
     beta_prev = beta; 
-    beta = -rsq/dot<double>(p, Ap, size);
+    beta = -rsq/dot(p, Ap, size);
     //cout << "beta = " << beta << "\n";
     
     for (n = 0; n < n_shift_rem; n++)
@@ -138,7 +138,7 @@ inversion_info minv_vector_cg_m(double **phi, double *phi0, int n_shift, int siz
     caxpy(beta, Ap, r, size);
     
     // Exit if new residual is small enough
-    rsqNew = norm2sq<double>(r, size);
+    rsqNew = norm2sq(r, size);
     
     print_verbosity_resid(verb, "CG-M", k+1, invif.ops_count, sqrt(rsqNew)/bsqrt); 
     
@@ -267,10 +267,10 @@ inversion_info minv_vector_cg_m(double **phi, double *phi0, int n_shift, int siz
   double* relres = new double[n_shift];
   for (n = 0; n < n_shift; n++)
   {
-    zero<double>(Ap, size);
+    zero_vector(Ap, size);
     (*matrix_vector)(Ap, phi[n], extra_info); invif.ops_count++;
     caxpy(shifts[n], phi[n], Ap, size);
-    invif.resSqmrhs[n] = diffnorm2sq<double>(Ap, phi0, size);
+    invif.resSqmrhs[n] = diffnorm2sq(Ap, phi0, size);
     relres[n] = sqrt(invif.resSqmrhs[n])/bsqrt;
   }
   
@@ -357,11 +357,11 @@ inversion_info minv_vector_cg_m(complex<double>  **phi, complex<double>  *phi0, 
   beta = 1.0; alpha = 0.0;
 
   // Zero vectors;
-  zero<double>(r, size); 
-  zero<double>(p, size); zero<double>(Ap, size);
+  zero_vector(r, size); 
+  zero_vector(p, size); zero_vector(Ap, size);
   
   // Find norm of rhs.
-  bsqrt = sqrt(norm2sq<double>(phi0, size));
+  bsqrt = sqrt(norm2sq(phi0, size));
   
   // There can't be an initial guess... though it is sort of possible, in reference to:
   // http://arxiv.org/pdf/0810.1081v1.pdf
@@ -369,25 +369,25 @@ inversion_info minv_vector_cg_m(complex<double>  **phi, complex<double>  *phi0, 
   // 1. x_sigma = 0, r = p_sigma = b.
   for (n = 0; n < n_shift; n++)
   {
-    copy<double>(p_s[n], phi0, size);
-    zero<double>(phi[n], size);
+    copy_vector(p_s[n], phi0, size);
+    zero_vector(phi[n], size);
   }
-  copy<double>(p, phi0, size);
-  copy<double>(r, phi0, size);
+  copy_vector(p, phi0, size);
+  copy_vector(r, phi0, size);
   
   // Compute Ap.
-  zero<double>(Ap, size);  
+  zero_vector(Ap, size);  
   (*matrix_vector)(Ap, p, extra_info); invif.ops_count++;
 
   // Compute rsq.
-  rsq = norm2sq<double>(r, size);
+  rsq = norm2sq(r, size);
   
   // iterate till convergence
   for(k = 0; k< max_iter; k++) {
     
     // 2. beta_i = - rsq / pAp. Which is a weird switch from the normal notation, but whatever.
     beta_prev = beta; 
-    beta = -rsq/dot<double>(p, Ap, size);
+    beta = -rsq/dot(p, Ap, size);
     //cout << "beta = " << beta << "\n";
     
     for (n = 0; n < n_shift_rem; n++)
@@ -416,7 +416,7 @@ inversion_info minv_vector_cg_m(complex<double>  **phi, complex<double>  *phi0, 
     }
     
     // Exit if new residual is small enough
-    rsqNew = norm2sq<double>(r, size);
+    rsqNew = norm2sq(r, size);
     
     print_verbosity_resid(verb, "CG-M", k+1, invif.ops_count, sqrt(rsqNew)/bsqrt); 
     
@@ -545,10 +545,10 @@ inversion_info minv_vector_cg_m(complex<double>  **phi, complex<double>  *phi0, 
   double* relres = new double[n_shift];
   for (n = 0; n < n_shift; n++)
   {
-    zero<double>(Ap, size);
+    zero_vector(Ap, size);
     (*matrix_vector)(Ap, phi[n], extra_info); invif.ops_count++;
     caxpy(shifts[n], phi[n], Ap, size);
-    invif.resSqmrhs[n] = diffnorm2sq<double>(Ap, phi0, size);
+    invif.resSqmrhs[n] = diffnorm2sq(Ap, phi0, size);
     relres[n] = sqrt(invif.resSqmrhs[n])/bsqrt;
   }
   

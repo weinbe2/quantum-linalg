@@ -60,18 +60,18 @@ inversion_info minv_vector_gcr_var_precond(double  *phi, double  *phi0, int size
   Az = allocate_vector<double>(size);
   
   // Zero vectors. 
-  zero<double>(p, size);  zero<double>(r, size);
-  zero<double>(Ap, size); zero<double>(Ar, size);
-  zero<double>(z, size);  zero<double>(Az, size); 
+  zero_vector(p, size);  zero_vector(r, size);
+  zero_vector(Ap, size); zero_vector(Ar, size);
+  zero_vector(z, size);  zero_vector(Az, size); 
 
   // Initialize values.
   rsq = 0.0; bsqrt = 0.0; truersq = 0.0;
   
   // Copy initial guess into solution.
-  copy<double>(x, phi, size);
+  copy_vector(x, phi, size);
   
   // Find norm of rhs.
-  bsqrt = sqrt(norm2sq<double>(phi0, size));
+  bsqrt = sqrt(norm2sq(phi0, size));
   
   // 1. r_0 = b - Ax_0. x is phi, the initial guess.
   (*matrix_vector)(p, x, extra_info); invif.ops_count++; // Put Ax_0 into p, temp.
@@ -81,7 +81,7 @@ inversion_info minv_vector_gcr_var_precond(double  *phi, double  *phi0, int size
   (*precond_matrix_vector)(z, r, size, precond_info, &verb_prec); 
   
   // 3. p_0 = z_0, Compute A p_0 (called q_0 in paper)
-  copy<double>(p, z, size); 
+  copy_vector(p, z, size); 
   (*matrix_vector)(Ap, p, extra_info); invif.ops_count++;
 
   // iterate until convergence
@@ -92,7 +92,7 @@ inversion_info minv_vector_gcr_var_precond(double  *phi, double  *phi0, int size
     Ap_store.push_back(Ap);
     
     // 4. alpha = <Ap_k, r>/<Ap_k, Ap_k>
-    alpha = dot<double>(Ap, r, size)/norm2sq<double>(Ap, size);
+    alpha = dot(Ap, r, size)/norm2sq(Ap, size);
     
     // 5. x = x + alpha p_k
     caxpy(alpha, p, x, size);
@@ -101,7 +101,7 @@ inversion_info minv_vector_gcr_var_precond(double  *phi, double  *phi0, int size
     caxpy(-alpha, Ap, r, size);
     
     // Compute norm.
-    rsq = norm2sq<double>(r, size);
+    rsq = norm2sq(r, size);
     
     print_verbosity_resid(verb, "VPGCR", k+1, invif.ops_count, sqrt(rsq)/bsqrt); 
     
@@ -114,21 +114,21 @@ inversion_info minv_vector_gcr_var_precond(double  *phi, double  *phi0, int size
     }
     
     // 7. z = M^(-1) r;
-    zero<double>(z, size); 
+    zero_vector(z, size); 
     (*precond_matrix_vector)(z, r, size, precond_info, &verb_prec); 
     
     // 8. Compute Az.
-    zero<double>(Az, size);
+    zero_vector(Az, size);
     (*matrix_vector)(Az, z, extra_info); invif.ops_count++;
     
     // 8. b_ij = -<Az_{j+1}, Ap_i>/<Ap_i, Ap_i> for i = 0, ..., j
     // 9. p_{j+1} = z_{j+1} + sum_i=0^j b_ij p_i
     // 10. Ap_{j+1} = Az_{j+1} + sum_i=0^j b_ij Ap_i
-    p = allocate_vector<double>(size);  copy<double>(p, z, size);
-    Ap = allocate_vector<double>(size); copy<double>(Ap, Az, size);
+    p = allocate_vector<double>(size);  copy_vector(p, z, size);
+    Ap = allocate_vector<double>(size); copy_vector(Ap, Az, size);
     for (ii = 0; ii <= k; ii++)
     {
-      beta_ij = -dot<double>(Ap_store[ii], Az, size)/norm2sq<double>(Ap_store[ii], size);
+      beta_ij = -dot(Ap_store[ii], Az, size)/norm2sq(Ap_store[ii], size);
       caxpy(beta_ij, p_store[ii], p, size);
       caxpy(beta_ij, Ap_store[ii], Ap, size);
     }
@@ -147,12 +147,12 @@ inversion_info minv_vector_gcr_var_precond(double  *phi, double  *phi0, int size
 	k++;
   
   // Check true residual.
-  zero<double>(p,size);
+  zero_vector(p,size);
   (*matrix_vector)(p,x,extra_info); invif.ops_count++;
   truersq = diffnorm2sq(p, phi0, size);
   
   // Copy solution into phi.
-  copy<double>(phi, x, size);
+  copy_vector(phi, x, size);
   
   // Free all the things!
   deallocate_vector(&x);
@@ -182,7 +182,7 @@ inversion_info minv_vector_gcr_var_precond_restart(double  *phi, double  *phi0, 
   int iter; // counts total number of iterations.
   int ops_count; 
   inversion_info invif;
-  double bsqrt = sqrt(norm2sq<double>(phi0, size));
+  double bsqrt = sqrt(norm2sq(phi0, size));
   
   stringstream ss;
   ss << "Variably Preconditioned Restarted GCR(" << restart_freq << ")";
@@ -243,18 +243,18 @@ inversion_info minv_vector_gcr_var_precond(complex<double>  *phi, complex<double
   Az = allocate_vector<complex<double>>(size);
   
   // Zero vectors. 
-  zero<double>(p, size);  zero<double>(r, size);
-  zero<double>(Ap, size); zero<double>(Ar, size);
-  zero<double>(z, size);  zero<double>(Az, size); 
+  zero_vector(p, size);  zero_vector(r, size);
+  zero_vector(Ap, size); zero_vector(Ar, size);
+  zero_vector(z, size);  zero_vector(Az, size); 
 
   // Initialize values.
   rsq = 0.0; bsqrt = 0.0; truersq = 0.0;
   
   // Copy initial guess into solution.
-  copy<double>(x, phi, size);
+  copy_vector(x, phi, size);
   
   // Find norm of rhs.
-  bsqrt = sqrt(norm2sq<double>(phi0, size));
+  bsqrt = sqrt(norm2sq(phi0, size));
   
   // 1. r_0 = b - Ax_0. x is phi, the initial guess.
   (*matrix_vector)(p, x, extra_info); invif.ops_count++; // Put Ax_0 into p, temp.
@@ -264,7 +264,7 @@ inversion_info minv_vector_gcr_var_precond(complex<double>  *phi, complex<double
   (*precond_matrix_vector)(z, r, size, precond_info, &verb_prec); 
   
   // 3. p_0 = z_0, Compute A p_0 (called q_0 in paper)
-  copy<double>(p, z, size); 
+  copy_vector(p, z, size); 
   (*matrix_vector)(Ap, p, extra_info); invif.ops_count++;
 
   // iterate until convergence
@@ -275,7 +275,7 @@ inversion_info minv_vector_gcr_var_precond(complex<double>  *phi, complex<double
     Ap_store.push_back(Ap);
     
     // 4. alpha = <Ap_k, r>/<Ap_k, Ap_k>
-    alpha = dot<double>(Ap, r, size)/norm2sq<double>(Ap, size);
+    alpha = dot(Ap, r, size)/norm2sq(Ap, size);
     
     // 5. x = x + alpha p_k
     caxpy(alpha, p, x, size);
@@ -284,7 +284,7 @@ inversion_info minv_vector_gcr_var_precond(complex<double>  *phi, complex<double
     caxpy(-alpha, Ap, r, size);
     
     // Compute norm.
-    rsq = norm2sq<double>(r, size);
+    rsq = norm2sq(r, size);
     
     print_verbosity_resid(verb, "VPGCR", k+1, invif.ops_count, sqrt(rsq)/bsqrt); 
     
@@ -295,21 +295,21 @@ inversion_info minv_vector_gcr_var_precond(complex<double>  *phi, complex<double
     }
     
     // 7. z = M^(-1) r;
-    zero<double>(z, size); 
+    zero_vector(z, size); 
     (*precond_matrix_vector)(z, r, size, precond_info, &verb_prec); 
     
     // 8. Compute Az.
-    zero<double>(Az, size);
+    zero_vector(Az, size);
     (*matrix_vector)(Az, z, extra_info); invif.ops_count++;
     
     // 8. b_ij = -<Az_{j+1}, Ap_i>/<Ap_i, Ap_i> for i = 0, ..., j
     // 9. p_{j+1} = z_{j+1} + sum_i=0^j b_ij p_i
     // 10. Ap_{j+1} = Az_{j+1} + sum_i=0^j b_ij Ap_i
-    p = new complex<double>[size];  copy<double>(p, z, size);
-    Ap = new complex<double>[size]; copy<double>(Ap, Az, size);
+    p = new complex<double>[size];  copy_vector(p, z, size);
+    Ap = new complex<double>[size]; copy_vector(Ap, Az, size);
     for (ii = 0; ii <= k; ii++)
     {
-      beta_ij = -dot<double>(Ap_store[ii], Az, size)/norm2sq<double>(Ap_store[ii], size);
+      beta_ij = -dot(Ap_store[ii], Az, size)/norm2sq(Ap_store[ii], size);
       caxpy(beta_ij, p_store[ii], p, size);
       caxpy(beta_ij, Ap_store[ii], Ap, size);
     }
@@ -328,12 +328,12 @@ inversion_info minv_vector_gcr_var_precond(complex<double>  *phi, complex<double
 	k++;
   
   // Check true residual.
-  zero<double>(p,size);
+  zero_vector(p,size);
   (*matrix_vector)(p,x,extra_info); invif.ops_count++;
   truersq = diffnorm2sq(p, phi0, size);
   
   // Copy solution into phi.
-  copy<double>(phi, x, size);
+  copy_vector(phi, x, size);
   
   // Free all the things!
   deallocate_vector(&x);
@@ -364,7 +364,7 @@ inversion_info minv_vector_gcr_var_precond_restart(complex<double>  *phi, comple
   int iter; // counts total number of iterations.
   int ops_count; 
   inversion_info invif;
-  double bsqrt = sqrt(norm2sq<double>(phi0, size));
+  double bsqrt = sqrt(norm2sq(phi0, size));
   
   stringstream ss;
   ss << "Variably Preconditioned Restarted GCR(" << restart_freq << ")";

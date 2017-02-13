@@ -45,24 +45,24 @@ inversion_info minv_vector_gcr(double  *phi, double  *phi0, int size, int max_it
   Ap = allocate_vector<double>(size);
   
   // Zero vectors. 
-  zero<double>(p, size);  zero<double>(r, size);
-  zero<double>(Ap, size); zero<double>(Ar, size);
+  zero_vector(p, size);  zero_vector(r, size);
+  zero_vector(Ap, size); zero_vector(Ar, size);
 
   // Initialize values.
   rsq = 0.0; bsqrt = 0.0; truersq = 0.0;
   
-  // Copy initial guess into solution.
-  copy<double>(x, phi, size);
+  // copy_vector initial guess into solution.
+  copy_vector(x, phi, size);
   
   // Find norm of rhs.
-  bsqrt = sqrt(norm2sq<double>(phi0, size));
+  bsqrt = sqrt(norm2sq(phi0, size));
   
   // 1. r_0 = b - Ax_0. x is phi, the initial guess.
   (*matrix_vector)(p, x, extra_info); invif.ops_count++; // Put Ax_0 into p, temp.
   cxpayz(phi0, -1.0, p, r, size);
   
   // 2. p_0 = r_0.
-  copy<double>(p, r, size);
+  copy_vector(p, r, size);
   
   // 3. Compute A p_0.
   (*matrix_vector)(Ap, p, extra_info); invif.ops_count++;
@@ -75,7 +75,7 @@ inversion_info minv_vector_gcr(double  *phi, double  *phi0, int size, int max_it
     Ap_store.push_back(Ap);
     
     // 4. alpha = <Ap_k, r>/<Ap_k, Ap_k>
-    alpha = dot<double>(Ap, r, size)/norm2sq<double>(Ap, size);
+    alpha = dot(Ap, r, size)/norm2sq(Ap, size);
     
     // 5. x = x + alpha p_k
     caxpy(alpha, p, x, size);
@@ -84,7 +84,7 @@ inversion_info minv_vector_gcr(double  *phi, double  *phi0, int size, int max_it
     caxpy(-alpha, Ap, r, size);
     
     // Compute norm.
-    rsq = norm2sq<double>(r, size);
+    rsq = norm2sq(r, size);
     
     print_verbosity_resid(verb, "GCR", k+1, invif.ops_count, sqrt(rsq)/bsqrt); 
     
@@ -95,17 +95,17 @@ inversion_info minv_vector_gcr(double  *phi, double  *phi0, int size, int max_it
     }
     
     // 7. Compute Ar.
-    zero<double>(Ar, size);
+    zero_vector(Ar, size);
     (*matrix_vector)(Ar, r, extra_info); invif.ops_count++;
     
     // 8. b_ij = -<Ar_{j+1}, Ap_i>/<Ap_i, Ap_i> for i = 0, ..., j
     // 9. p_{j+1} = r_{j+1} + sum_i=0^j b_ij p_i
     // 10. Ap_{j+1} = Ar_{j+1} + sum_i=0^j b_ij Ap_i
-    p = allocate_vector<double>(size);  copy<double>(p, r, size);
-    Ap = allocate_vector<double>(size); copy<double>(Ap, Ar, size);
+    p = allocate_vector<double>(size);  copy_vector(p, r, size);
+    Ap = allocate_vector<double>(size); copy_vector(Ap, Ar, size);
     for (ii = 0; ii <= k; ii++)
     {
-      beta_ij = -dot<double>(Ap_store[ii], Ar, size)/norm2sq<double>(Ap_store[ii], size);
+      beta_ij = -dot(Ap_store[ii], Ar, size)/norm2sq(Ap_store[ii], size);
       caxpy(beta_ij, p_store[ii], p, size);
       caxpy(beta_ij, Ap_store[ii], Ap, size);
     }
@@ -124,12 +124,12 @@ inversion_info minv_vector_gcr(double  *phi, double  *phi0, int size, int max_it
   k++;
   
   // Check true residual.
-  zero<double>(p,size);
+  zero_vector(p,size);
   (*matrix_vector)(p,x,extra_info); invif.ops_count++;
   truersq = diffnorm2sq(p, phi0, size);
   
-  // Copy solution into phi.
-  copy<double>(phi, x, size);
+  // copy_vector solution into phi.
+  copy_vector(phi, x, size);
   
   // Free all the things!
   deallocate_vector(&x);
@@ -157,7 +157,7 @@ inversion_info minv_vector_gcr_restart(double  *phi, double  *phi0, int size, in
   int iter; // counts total number of iterations.
   int ops_count; 
   inversion_info invif;
-  double bsqrt = sqrt(norm2sq<double>(phi0, size));
+  double bsqrt = sqrt(norm2sq(phi0, size));
   
   inversion_verbose_struct verb_rest;
   shuffle_verbosity_restart(&verb_rest, verb);
@@ -214,24 +214,24 @@ inversion_info minv_vector_gcr(complex<double>  *phi, complex<double>  *phi0, in
   Ap = allocate_vector<complex<double>>(size);
   
   // Zero vectors. 
-  zero<double>(p, size);  zero<double>(r, size);
-  zero<double>(Ap, size); zero<double>(Ar, size);
+  zero_vector(p, size);  zero_vector(r, size);
+  zero_vector(Ap, size); zero_vector(Ar, size);
 
   // Initialize values.
   rsq = 0.0; bsqrt = 0.0; truersq = 0.0;
   
-  // Copy initial guess into solution.
-  copy<double>(x, phi, size);
+  // copy_vector initial guess into solution.
+  copy_vector(x, phi, size);
   
   // Find norm of rhs.
-  bsqrt = sqrt(norm2sq<double>(phi0, size));
+  bsqrt = sqrt(norm2sq(phi0, size));
   
   // 1. r_0 = b - Ax_0. x is phi, the initial guess.
   (*matrix_vector)(p, x, extra_info); invif.ops_count++; // Put Ax_0 into p, temp.
   cxpayz(phi0, -1.0, p, r, size);
   
   // 2. p_0 = r_0.
-  copy<double>(p, r, size);
+  copy_vector(p, r, size);
   
   // 3. Compute A p_0.
   (*matrix_vector)(Ap, p, extra_info); invif.ops_count++;
@@ -244,7 +244,7 @@ inversion_info minv_vector_gcr(complex<double>  *phi, complex<double>  *phi0, in
     Ap_store.push_back(Ap);
     
     // 4. alpha = <r, Ap_k>/<Ap_k, Ap_k>
-    alpha = dot<double>(Ap, r, size)/norm2sq<double>(Ap, size);
+    alpha = dot(Ap, r, size)/norm2sq(Ap, size);
     
     // 5. x = x + alpha p_k
     caxpy(alpha, p, x, size);
@@ -253,7 +253,7 @@ inversion_info minv_vector_gcr(complex<double>  *phi, complex<double>  *phi0, in
     caxpy(-alpha, Ap, r, size);
     
     // Compute norm.
-    rsq = norm2sq<double>(r, size);
+    rsq = norm2sq(r, size);
     
     print_verbosity_resid(verb, "GCR", k+1, invif.ops_count, sqrt(rsq)/bsqrt); 
     
@@ -264,17 +264,17 @@ inversion_info minv_vector_gcr(complex<double>  *phi, complex<double>  *phi0, in
     }
     
     // 7. Compute Ar.
-    zero<double>(Ar, size);
+    zero_vector(Ar, size);
     (*matrix_vector)(Ar, r, extra_info); invif.ops_count++;
     
     // 8. b_ij = -<Ap_i, Ar_{j+1}>/<Ap_i, Ap_i> for i = 0, ..., j
     // 9. p_{j+1} = r_{j+1} + sum_i=0^j b_ij p_i
     // 10. Ap_{j+1} = Ar_{j+1} + sum_i=0^j b_ij Ap_i
-    p = allocate_vector<complex<double>>(size);  copy<double>(p, r, size);
-    Ap = allocate_vector<complex<double>>(size); copy<double>(Ap, Ar, size);
+    p = allocate_vector<complex<double>>(size);  copy_vector(p, r, size);
+    Ap = allocate_vector<complex<double>>(size); copy_vector(Ap, Ar, size);
     for (ii = 0; ii <= k; ii++)
     {
-      beta_ij = -dot<double>(Ap_store[ii], Ar, size)/norm2sq<double>(Ap_store[ii], size);
+      beta_ij = -dot(Ap_store[ii], Ar, size)/norm2sq(Ap_store[ii], size);
       caxpy(beta_ij, p_store[ii], p, size);
       caxpy(beta_ij, Ap_store[ii], Ap, size);
     }
@@ -293,12 +293,12 @@ inversion_info minv_vector_gcr(complex<double>  *phi, complex<double>  *phi0, in
   k++;
   
   // Check true residual.
-  zero<double>(p,size);
+  zero_vector(p,size);
   (*matrix_vector)(p,x,extra_info); invif.ops_count++;
   truersq = diffnorm2sq(p, phi0, size);
   
-  // Copy solution into phi.
-  copy<double>(phi, x, size);
+  // copy_vector solution into phi.
+  copy_vector(phi, x, size);
   
   // Free all the things!
   deallocate_vector(&x);
@@ -327,7 +327,7 @@ inversion_info minv_vector_gcr_restart(complex<double>  *phi, complex<double>  *
   int iter; // counts total number of iterations.
   int ops_count; 
   inversion_info invif;
-  double bsqrt = sqrt(norm2sq<double>(phi0, size));
+  double bsqrt = sqrt(norm2sq(phi0, size));
   
   stringstream ss;
   ss << "GCR(" << restart_freq << ")";

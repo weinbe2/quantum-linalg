@@ -34,10 +34,10 @@ void square_laplacian_cgpreconditioner(double* lhs, double* rhs, int size, void*
 // Prepare vectors for various tests.
 void reset_vectors(double* rhs, double* lhs, double* check, int length)
 {
-  zero<double>(lhs, length*length);
-  zero<double>(rhs, length*length);
+  zero_vector(lhs, length*length);
+  zero_vector(rhs, length*length);
   rhs[length/2+(length/2)*length] = 1.0; // set a point on rhs.
-  zero<double>(check, length*length);
+  zero_vector(check, length*length);
 }
 
 
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
   check = allocate_vector<double>(volume);
   
   // Zero out vectors, set rhs point.
-  // zero<double>(lattice, 2*volume);
+  // zero_vector(lattice, 2*volume);
   reset_vectors(rhs, lhs, check, length);
   
   // Get norm for rhs.
