@@ -11,6 +11,7 @@
 
 #include "inverters/generic_cg.h"
 #include "inverters/generic_bicgstab.h"
+#include "inverters/generic_bicgstab_l.h"
 #include "inverters/generic_gcr.h"
 
 #include "inverters/generic_gcr_var_precond.h"
@@ -61,6 +62,7 @@ int main(int argc, char** argv)
   double tol = 1e-8;
   int max_iter = 4000;
   int restart_freq = 64; // for restarted solves. 
+  int bicgstabl = 8; // L for, well, BiCGstab-L. 
   
   // Some start-up.
   int volume = length*length;
@@ -130,6 +132,23 @@ int main(int argc, char** argv)
   explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
   printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
   
+  /* BiCGstab-L */
+  reset_vectors(rhs, lhs, check, length);
+  invif = minv_vector_bicgstab_l(lhs, rhs, volume, max_iter, tol, bicgstabl,  square_laplacian, &lapstr);
+  if (invif.success == true)
+  {
+    printf("Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
+  }
+  else // failed, maybe.
+  {
+    printf("Potential error! Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
+  }
+  printf("Computing [check] = A [lhs] as a confirmation.\n");
+  // Check and make sure we get the right answer.
+  square_laplacian(check, lhs, &lapstr);
+  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
+  
   /* Restarted GCR */
   reset_vectors(rhs, lhs, check, length);
   invif = minv_vector_gcr_restart(lhs, rhs, volume, max_iter, tol, restart_freq, square_laplacian, &lapstr);
@@ -159,6 +178,7 @@ int main(int argc, char** argv)
   // 4: maximum iterations
   // 5: residual
   // 5a for gcr_restart: how often to restart.
+  // 5b for bicgstab_l: what value of l to use. 
   // 6: function pointer
   // 7: "extra data":
   // 8: preconditioning function pointer

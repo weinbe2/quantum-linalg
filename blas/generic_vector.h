@@ -311,6 +311,62 @@ template<typename T> inline void caxpbypcz(complex<T> a, complex<T>* x, complex<
   }
 }
 
+// Implement caxpyBzpx, y += a*x THEN x += b*z. 
+template<typename T> inline void caxpyBzpx(T a, T* x, T* y, T b, T* z, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    y[i] += a*x[i];
+    x[i] += b*z[i];
+  }
+}
+
+template<typename T> inline void caxpyBzpx(T a, complex<T>* x, complex<T>* y, T b, complex<T>* z, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    y[i] += a*x[i];
+    x[i] += b*z[i];
+  }
+}
+
+template<typename T> inline void caxpyBzpx(complex<T> a, complex<T>* x, complex<T>* y, complex<T> b, complex<T>* z, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    y[i] += a*x[i];
+    x[i] += b*z[i];
+  }
+}
+
+// Implement caxpyBxpz, y += a*x, z += b*x
+template<typename T> inline void caxpyBxpz(T a, T* x, T* y, T b, T* z, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    y[i] += a*x[i];
+    z[i] += b*x[i];
+  }
+}
+
+template<typename T> inline void caxpyBxpz(T a, complex<T>* x, complex<T>* y, T b, complex<T>* z, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    y[i] += a*x[i];
+    z[i] += b*x[i];
+  }
+}
+
+template<typename T> inline void caxpyBxpz(complex<T> a, complex<T>* x, complex<T>* y, complex<T> b, complex<T>* z, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    y[i] += a*x[i];
+    z[i] += b*x[i];
+  }
+}
+
 // Computes v1 dot v2.
 template<typename T> inline T dot(T* v1, T* v2, int size)
 {
