@@ -3,8 +3,8 @@
 // Solves lhs = A^(-1) rhs with GCR.
 // Makes no assumptions about the structure of the matrix. 
 
-#ifndef ESW_INVERTER_GCR
-#define ESW_INVERTER_GCR
+#ifndef QLINALG_INVERTER_GCR
+#define QLINALG_INVERTER_GCR
 
 #include <string>
 #include <sstream>
@@ -206,11 +206,12 @@ inversion_info minv_vector_gcr(complex<double>  *phi, complex<double>  *phi0, in
   inversion_info invif;
 
   // Allocate memory.
-  x = new complex<double>[size];
-  r = new complex<double>[size];
-  Ar = new complex<double>[size];
-  p = new complex<double>[size];
-  Ap = new complex<double>[size];
+  x = allocate_vector<complex<double>>(size);
+  x = allocate_vector<complex<double>>(size);
+  r = allocate_vector<complex<double>>(size);
+  Ar = allocate_vector<complex<double>>(size);
+  p = allocate_vector<complex<double>>(size);
+  Ap = allocate_vector<complex<double>>(size);
   
   // Zero vectors. 
   zero<double>(p, size);  zero<double>(r, size);
@@ -269,8 +270,8 @@ inversion_info minv_vector_gcr(complex<double>  *phi, complex<double>  *phi0, in
     // 8. b_ij = -<Ap_i, Ar_{j+1}>/<Ap_i, Ap_i> for i = 0, ..., j
     // 9. p_{j+1} = r_{j+1} + sum_i=0^j b_ij p_i
     // 10. Ap_{j+1} = Ar_{j+1} + sum_i=0^j b_ij Ap_i
-    p = new complex<double>[size];  copy<double>(p, r, size);
-    Ap = new complex<double>[size]; copy<double>(Ap, Ar, size);
+    p = allocate_vector<complex<double>>(size);  copy<double>(p, r, size);
+    Ap = allocate_vector<complex<double>>(size); copy<double>(Ap, Ar, size);
     for (ii = 0; ii <= k; ii++)
     {
       beta_ij = -dot<double>(Ap_store[ii], Ar, size)/norm2sq<double>(Ap_store[ii], size);
@@ -300,14 +301,14 @@ inversion_info minv_vector_gcr(complex<double>  *phi, complex<double>  *phi0, in
   copy<double>(phi, x, size);
   
   // Free all the things!
-  delete[] x;
-  delete[] r;
-  delete[] Ar;
+  deallocate_vector(&x);
+  deallocate_vector(&r);
+  deallocate_vector(&Ar);
   int l = p_store.size();
   for (i = 0; i < l; i++)
   {
-    delete[] p_store[i];
-    delete[] Ap_store[i];
+    deallocate_vector(&p_store[i]);
+    deallocate_vector(&Ap_store[i]);
   }
 
   print_verbosity_summary(verb, "GCR", invif.success, k, invif.ops_count, sqrt(truersq)/bsqrt);

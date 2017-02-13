@@ -3,8 +3,8 @@
 // Solves lhs = A^(-1) rhs with bicgstab
 // Makes no assumptions about the matrix.
 
-#ifndef ESW_INVERTER_BICGSTAB
-#define ESW_INVERTER_BICGSTAB
+#ifndef QLINALG_INVERTER_BICGSTAB
+#define QLINALG_INVERTER_BICGSTAB
 
 #include <string>
 #include <sstream>

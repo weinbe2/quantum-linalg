@@ -13,6 +13,8 @@
 #include "inverters/generic_bicgstab.h"
 #include "inverters/generic_gcr.h"
 
+#include "inverters/generic_gcr_var_precond.h"
+
 #include "inverters/generic_cg_m.h"
 
 #include "square_laplace.h"
@@ -22,6 +24,11 @@ using namespace std;
 
 // Square laplacian function.
 void square_laplacian(double* lhs, double* rhs, void* extra_data);
+
+// Reference preconditioning function, which preconditions solving
+// the square laplace equation with 8 iterations of CG (I know this is
+// a silly preconditioner, but it's meant to demonstrate a point).
+void square_laplacian_cgpreconditioner(double* lhs, double* rhs, int size, void* extra_data, inversion_verbose_struct* verb);
 
 // Prepare vectors for various tests.
 void reset_vectors(double* rhs, double* lhs, double* check, int length)
@@ -74,6 +81,10 @@ int main(int argc, char** argv)
 
   printf("Solving A [lhs] = [rhs] for lhs, using a point source. Single mass test: m^2 = %f.\n\n", m_sq);
 
+  /****************
+  * NORMAL SOLVES *
+  ****************/
+  
   // lhs = A^(-1) rhs
   // Arguments:
   // 1: lhs
@@ -84,6 +95,7 @@ int main(int argc, char** argv)
   // 5a for gcr_restart: how often to restart.
   // 6: function pointer
   // 7: "extra data": 
+  // 8: optional, verbosity information.
 
   /* CG */
   invif = minv_vector_cg(lhs, rhs, volume, max_iter, tol, square_laplacian, &lapstr);
@@ -134,6 +146,45 @@ int main(int argc, char** argv)
   square_laplacian(check, lhs, &lapstr);
   explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
   printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
+  
+  /************************
+  * PRECONDITIONED SOLVES *
+  ************************/
+  
+  // lhs = A^(-1) rhs
+  // Arguments:
+  // 1: lhs
+  // 2: rhs
+  // 3: size of vector
+  // 4: maximum iterations
+  // 5: residual
+  // 5a for gcr_restart: how often to restart.
+  // 6: function pointer
+  // 7: "extra data":
+  // 8: preconditioning function pointer
+  // 9: preconditioning "extra_data"
+  // 10: optional, verbosity information.
+  
+  /* Variably preconditioned GCR */
+  reset_vectors(rhs, lhs, check, length); 
+  invif = minv_vector_gcr_var_precond(lhs, rhs, volume, max_iter, tol, square_laplacian, &lapstr, square_laplacian_cgpreconditioner, &lapstr);
+  if (invif.success == true)
+  {
+    printf("Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
+  }
+  else // failed, maybe.
+  {
+    printf("Potential error! Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
+  }
+  printf("Computing [check] = A [lhs] as a confirmation.\n");
+  // Check and make sure we get the right answer.
+  square_laplacian(check, lhs, &lapstr);
+  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
+  
+  /********************
+  * MULTISHIFT SOLVES *
+  ********************/
   
   /* Special check for multishift. */
   printf("Solving (A + shift[i]) lhs[i] = [rhs] for lhs, using a point source. Multishift mass test: m^2 = %f, %f, %f.\n\n", m_sq, m_sq+0.01, m_sq+0.05);
@@ -270,6 +321,22 @@ void square_laplacian(double* lhs, double* rhs, void* extra_data)
     lhs[i] = lhs[i]+(4+m_sq)*rhs[i];
   }
 
+}
+
+// Reference preconditioning function, which preconditions solving
+// the square laplace equation with 8 iterations of CG (I know this is
+// a silly preconditioner, but it's meant to demonstrate a point).
+void square_laplacian_cgpreconditioner(double* lhs, double* rhs, int size, void* extra_data, inversion_verbose_struct* verb)
+{
+  // Run 8 iterations of CG.
+  // 8-> max of 8 iterations
+  // 1e-15 -> make sure the 8 iterations is what dominates.
+  // Otherwise pass data through.
+  minv_vector_cg(lhs, rhs, size, 8, 1e-15, square_laplacian, extra_data, verb);
+  
+  // If I was smart about this, I'd write a special structure which holds
+  // a restart count, tolerance, matrix pointer, and the original 'extra_data'.
+  // This would avoid hard coding everything.
 }
 
 

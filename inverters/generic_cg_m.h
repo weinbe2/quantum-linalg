@@ -6,8 +6,8 @@
 // Assumes the matrix (A+shift[i]) is Hermitian (symmetric) positive
 //   definite for all shift[i]'s. 
 
-#ifndef ESW_INVERTER_CG_M
-#define ESW_INVERTER_CG_M
+#ifndef QLINALG_INVERTER_CG_M
+#define QLINALG_INVERTER_CG_M
 
 #include <string>
 #include <complex>

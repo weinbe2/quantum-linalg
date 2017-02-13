@@ -3,8 +3,8 @@
 // Solves lhs = A^(-1) rhs with CG.
 // Assumes the matrix is Hermitian (symmetric) positive definite.
 
-#ifndef ESW_INVERTER_CG
-#define ESW_INVERTER_CG
+#ifndef QLINALG_INVERTER_CG
+#define QLINALG_INVERTER_CG
 
 #include <string>
 #include <sstream>
