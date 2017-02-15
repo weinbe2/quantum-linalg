@@ -110,7 +110,7 @@ template<typename T> inline void copy_vector(T* v1, T* v2, int size)
 {
   for (int i = 0; i < size; i++)
   {
-  v1[i] = v2[i];
+    v1[i] = v2[i];
   }
 }
 
@@ -119,7 +119,7 @@ template<typename T> inline void cxpy(T* x, T* y, int size)
 {
   for (int i = 0; i < size; i++)
   {
-  y[i] += x[i];
+    y[i] += x[i];
   }
 }
 
@@ -128,8 +128,15 @@ template<typename T, typename U = T> inline void caxpy(U a, T* x, T* y, int size
 {
   for (int i = 0; i < size; i++)
   {
-  y[i] += a*x[i];
+    y[i] += a*x[i];
   }
+}
+
+// Special strided caxpy.
+template<typename T, typename U = T> inline void caxpy_stride(U a, T* x, T* y, int size, int start, int stride)
+{
+  for (int i = start; i < size; i += stride)
+    y[i] += a*x[i];
 }
 
 // Implement cxpay, y = x + a*y
