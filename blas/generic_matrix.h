@@ -17,12 +17,12 @@ using std::polar;
 #endif
 
 // Apply the global mat-vec operation in row-major.
-typename<template T> inline void cMATxpy(T* mat, T* x, T* y, int nelem, int nrow, int ncol)
+template<typename T> inline void cMATxpy(T* mat, T* x, T* y, int nelem, int nrow, int ncol)
 {
   int mat_vol = nrow*ncol;
-  for (i = 0; i < nelem; i++)
+  for (int i = 0; i < nelem; i++)
   {
-    cMATxpy(mat+i*mat_vol, x+i*ncol, y+i*nrow, nrow, ncol);
+    cMATxpy_local(mat+i*mat_vol, x+i*ncol, y+i*nrow, nrow, ncol);
   }
 }
 

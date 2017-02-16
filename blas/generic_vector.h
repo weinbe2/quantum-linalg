@@ -29,10 +29,10 @@ template<typename T> inline void deallocate_vector(T** x)
 // Zeroes a vector.
 template<typename T> inline void zero_vector(T* x, int size)
 {
-   for (int i = 0; i < size; i++)
-   {
+  for (int i = 0; i < size; i++)
+  {
     x[i] = static_cast<T>(0.0);
-   }
+  }
 }
 
 
@@ -41,7 +41,7 @@ template <typename T, typename U = T> inline void constant_vector(T* x, U val, i
 {
   for (int i = 0; i < size; i++)
   {
-  x[i] = static_cast<T>(val);
+    x[i] = static_cast<T>(val);
   }
 }
 
@@ -53,7 +53,7 @@ template<typename T> inline void gaussian(T* x, int size, std::mt19937 &generato
   std::normal_distribution<> dist(0.0, deviation);
   for (int i = 0; i < size; i++)
   {
-  x[i] = static_cast<T>(dist(generator));
+    x[i] = static_cast<T>(dist(generator));
   }
 }
 

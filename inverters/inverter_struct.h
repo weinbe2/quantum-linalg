@@ -1,8 +1,8 @@
 // Copyright (c) 2017 Evan S Weinberg
 // Include file for the inverter info struct.
 
-#ifndef ESW_INVERTER_STRUCT
-#define ESW_INVERTER_STRUCT
+#ifndef QLINALG_INVERTER_STRUCT
+#define QLINALG_INVERTER_STRUCT
 
 #include <iostream>
 using namespace std;
