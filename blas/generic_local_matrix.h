@@ -5,8 +5,8 @@
 
 using std::complex;
 
-#ifndef GENERIC_MATRIX
-#define GENERIC_MATRIX
+#ifndef QLINALG_MATRIX_LOCAL
+#define QLINALG_MATRIX_LOCAL
 
 #ifndef PI
 #define PI 3.14159265358979323846
@@ -29,4 +29,4 @@ template<typename T> inline void cMATxy_local(T* mat, T* x, T* y, int nrow, int 
 
 
 
-#endif
+#endif // QLINALG_MATRIX_LOCAL
