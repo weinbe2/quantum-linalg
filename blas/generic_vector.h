@@ -97,7 +97,7 @@ template <typename T> inline void polar(complex<T>* x, int size)
 }
 
 // vectorized arg.
-template <typename T> inline void arg(complex<T>* x, int size)
+template <typename T> inline void arg_vector(complex<T>* x, int size)
 {
   for (int i = 0; i < size; i++)
   {
@@ -120,6 +120,15 @@ template<typename T> inline void cxpy(T* x, T* y, int size)
   for (int i = 0; i < size; i++)
   {
     y[i] += x[i];
+  }
+}
+
+// Implement cxty, y *= x.
+template<typename T> inline void cxty(T* x, T* y, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    y[i] *= x[i];
   }
 }
 
@@ -234,7 +243,7 @@ template <typename T> inline T re_dot(T* v1, T* v2, int size)
   T res = static_cast<T>(0.0);
   for (int i = 0; i < size; i++)
   {
-  res = res + v1[i]*v2[i];
+    res = res + v1[i]*v2[i];
   }
   return res;
 }
@@ -247,6 +256,17 @@ template <typename T> inline T re_dot(complex<T>* v1, complex<T>* v2, int size)
     res = res + conj(v1[i])*v2[i];
   }
   return real(res);
+}
+
+// Sum over the contents.
+template <typename T> inline T sum_vector(T* v1, int size)
+{
+  T res = static_cast<T>(0.0);
+  for (int i = 0; i < size; i++)
+  {
+    res = res + v1[i];
+  }
+  return res;
 }
 
 // Computes the vector norm squared.
@@ -352,13 +372,13 @@ inline void normalize(complex<T>* v1, int size)
 }
 
 template <typename T>
-inline void conj(T* v1, int size)
+inline void conj_vector(T* v1, int size)
 {
   return; // Trivial, it's real.
 }
 
 template <typename T>
-inline void conj(complex<T>* v1, int size)
+inline void conj_vector(complex<T>* v1, int size)
 {
   for (int i = 0; i < size; i++)
   {
