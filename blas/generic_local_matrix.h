@@ -16,7 +16,7 @@ using std::complex;
 // I should just pull in Eigen for this,
 // but why overcomplicate things for now.
 // y += A*x, A matrix. y is length nrow, x is length ncol.
-template<typename T> inline void cMATxy_local(T* mat, T* x, T* y, int nrow, int ncol)
+template<typename T> inline void cMATxpy_local(T* mat, T* x, T* y, int nrow, int ncol)
 {
   for (int i = 0; i < nrow; i++)
   {
@@ -26,6 +26,8 @@ template<typename T> inline void cMATxy_local(T* mat, T* x, T* y, int nrow, int 
     y[i] += tmp;
   }
 }
+
+
 
 
 
