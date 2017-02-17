@@ -417,5 +417,16 @@ inline void orthogonal(complex<T>* v1, complex<T>* v2, int size)
   }
 }
 
+// Apply some arbitrary function (supplied by a function pointer)
+// with void* data to every site in the vector.
+template <typename T>
+inline void arb_local_function_vector(T* v1, void (*fcn)(int,T&,void*), void* extra_data, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    (*fcn)(i,v1[i], extra_data);
+  }
+}
+
 #endif // GENERIC_VECTOR
 
