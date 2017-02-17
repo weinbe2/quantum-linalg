@@ -153,7 +153,7 @@ template<typename T, typename U = T> inline void cxpay(T* x, U a, T* y, int size
 {
   for (int i = 0; i < size; i++)
   {
-  y[i] = x[i] + a*y[i];
+    y[i] = x[i] + a*y[i];
   }
 }
 
@@ -162,7 +162,7 @@ template<typename T, typename U = T> inline void caxpby(U a, T* x, U b, T* y, in
 {
   for (int i = 0; i < size; i++)
   {
-  y[i] = a*x[i] + b*y[i];
+    y[i] = a*x[i] + b*y[i];
   }
 }
 
@@ -171,7 +171,16 @@ template<typename T, typename U = T> inline void cxpayz(T* x, U a, T* y, T* z, i
 {
   for (int i = 0; i < size; i++)
   {
-  z[i] = x[i] + a*y[i];
+    z[i] = x[i] + a*y[i];
+  }
+}
+
+// Implement caxpbypz, z = a*x + b*y
+template<typename T, typename U = T> inline void caxpbyz(U a, T* x, U b, T* y, T* z, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    z[i] = a*x[i] + b*y[i];
   }
 }
 
@@ -180,7 +189,7 @@ template<typename T, typename U = T> inline void caxpbypz(U a, T* x, U b, T* y, 
 {
   for (int i = 0; i < size; i++)
   {
-  z[i] += a*x[i] + b*y[i];
+    z[i] += a*x[i] + b*y[i];
   }
 }
 
