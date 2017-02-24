@@ -9,6 +9,7 @@
 
 #include "blas/generic_vector.h"
 
+#include "inverters/generic_minres.h"
 #include "inverters/generic_cg.h"
 #include "inverters/generic_bicgstab.h"
 #include "inverters/generic_bicgstab_l.h"
@@ -50,8 +51,8 @@ int main(int argc, char** argv)
   inversion_info invif;
 
   // Basic information about the lattice.
-  int length = 32;
-  double m_sq = 0.01;
+  int length = 128;
+  double m_sq = 0.001;
   
   // Structure which gets passed to the function.
   laplace_struct lapstr;
@@ -61,6 +62,7 @@ int main(int argc, char** argv)
   // Parameters related to solve.
   double tol = 1e-8;
   int max_iter = 4000;
+  double relaxation_param = 0.8;
   int restart_freq = 64; // for restarted solves. 
   int bicgstabl = 8; // L for, well, BiCGstab-L. 
   
@@ -95,11 +97,30 @@ int main(int argc, char** argv)
   // 4: maximum iterations
   // 5: residual
   // 5a for gcr_restart: how often to restart.
+  // 5b for minres: overrelaxation parameter (can leave this out, assumes 1)
   // 6: function pointer
   // 7: "extra data": 
   // 8: optional, verbosity information.
 
+  /* MinRes w/ Relaxation param. */
+  invif = minv_vector_minres(lhs, rhs, volume, max_iter, tol, relaxation_param, square_laplacian, &lapstr);
+  if (invif.success == true)
+  {
+    printf("Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
+  }
+  else // failed, maybe.
+  {
+    printf("Potential error! Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
+  }
+  printf("Computing [check] = A [lhs] as a confirmation.\n");
+  // Check and make sure we get the right answer.
+  square_laplacian(check, lhs, &lapstr);
+  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
+  
+
   /* CG */
+  reset_vectors(rhs, lhs, check, length);
   invif = minv_vector_cg(lhs, rhs, volume, max_iter, tol, square_laplacian, &lapstr);
   if (invif.success == true)
   {

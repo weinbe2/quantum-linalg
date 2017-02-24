@@ -47,24 +47,24 @@ template <typename T, typename U = T> inline void constant_vector(T* x, U val, i
 
 
 // Random gaussian vector.
-template<typename T> inline void gaussian(T* x, int size, std::mt19937 &generator, double deviation = 1.0)
+template<typename T> inline void gaussian(T* x, int size, std::mt19937 &generator, T deviation = 1.0, T mean = 0.0)
 {
   // Generate a normal distribution.
   std::normal_distribution<> dist(0.0, deviation);
   for (int i = 0; i < size; i++)
   {
-    x[i] = static_cast<T>(dist(generator));
+    x[i] = real(mean) + static_cast<T>(dist(generator));
   }
 }
 
 // Random gaussian vector, random in real and imag.
-template <typename T> inline void gaussian(complex<T>* x, int size, std::mt19937 &generator, double deviation = 1.0)
+template <typename T> inline void gaussian(complex<T>* x, int size, std::mt19937 &generator, T deviation = 1.0, complex<T> mean = 0.0)
 {
   // Generate a normal distribution.
   std::normal_distribution<> dist(0.0, deviation);
   for (int i = 0; i < size; i++)
   {
-  x[i] = std::complex<T>(static_cast<T>(dist(generator)), static_cast<T>(dist(generator)));
+  x[i] = std::complex<T>(real(mean) + static_cast<T>(dist(generator)), imag(mean) + static_cast<T>(dist(generator)));
   }
 }
 
@@ -113,6 +113,16 @@ template<typename T> inline void copy_vector(T* v1, T* v2, int size)
     v1[i] = v2[i];
   }
 }
+
+// Rescale cax, x *= a
+template<typename T, typename U = T> inline void cax(U a, T* x, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    x[i] *= a;
+  }
+}
+
 
 // Implement cxpy, y += x.
 template<typename T> inline void cxpy(T* x, T* y, int size)
@@ -208,8 +218,8 @@ template<typename T, typename U = T> inline void caxpyBzpx(U a, T* x, T* y, U b,
 {
   for (int i = 0; i < size; i++)
   {
-  y[i] += a*x[i];
-  x[i] += b*z[i];
+    y[i] += a*x[i];
+    x[i] += b*z[i];
   }
 }
 

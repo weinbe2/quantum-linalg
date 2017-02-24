@@ -93,6 +93,7 @@ inversion_info minv_vector_cg(double  *phi, double  *phi0, int size, int max_ite
     cxpay(r, beta, p, size);
     
     // Compute the new Ap.
+    zero_vector(Ap, size);
     (*matrix_vector)(Ap, p, extra_info); invif.ops_count++;
   } 
     
