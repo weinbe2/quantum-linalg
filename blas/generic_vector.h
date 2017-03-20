@@ -74,7 +74,7 @@ template <typename T> inline void random_uniform(T* x, int size, std::mt19937 &g
   std::uniform_real_distribution<> dist(min, max);
   for (int i = 0; i < size; i++)
   {
-  x[i] = static_cast<T>(dist(generator));
+    x[i] = static_cast<T>(dist(generator));
   }
 }
 
@@ -83,7 +83,7 @@ template <typename T> inline void random_uniform(complex<T>* x, int size, std::m
   std::uniform_real_distribution<> dist(min, max);
   for (int i = 0; i < size; i++)
   {
-  x[i] = static_cast<complex<T>>(dist(generator));
+    x[i] = static_cast<complex<T>>(dist(generator));
   }
 }
 
@@ -123,6 +123,14 @@ template<typename T, typename U = T> inline void cax(U a, T* x, int size)
   }
 }
 
+// Implement caxy, y = a*x
+template<typename T, typename U = T> inline void caxy(U a, T* x, T* y, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    y[i] = a*x[i];
+  }
+}
 
 // Implement cxpy, y += x.
 template<typename T> inline void cxpy(T* x, T* y, int size)
@@ -176,6 +184,15 @@ template<typename T, typename U = T> inline void caxpby(U a, T* x, U b, T* y, in
   }
 }
 
+// Implement cxpyz, z = x + y
+template<typename T> inline void cxpyz(T* x, T* y, T* z, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    z[i] = x[i] + y[i];
+  }
+}
+
 // Implement cxpayz, z = x + a*y
 template<typename T, typename U = T> inline void cxpayz(T* x, U a, T* y, T* z, int size)
 {
@@ -185,7 +202,7 @@ template<typename T, typename U = T> inline void cxpayz(T* x, U a, T* y, T* z, i
   }
 }
 
-// Implement caxpbypz, z = a*x + b*y
+// Implement caxpbyz, z = a*x + b*y
 template<typename T, typename U = T> inline void caxpbyz(U a, T* x, U b, T* y, T* z, int size)
 {
   for (int i = 0; i < size; i++)
