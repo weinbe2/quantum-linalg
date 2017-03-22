@@ -45,6 +45,13 @@ template <typename T, typename U = T> inline void constant_vector(T* x, U val, i
   }
 }
 
+// Special strided constant.
+template<typename T, typename U = T> inline void constant_vector_stride(T* x, U val, int size, int start, int stride)
+{
+  for (int i = start; i < size; i += stride)
+    x[i] = static_cast<T>(val);
+}
+
 
 // Random gaussian vector.
 template<typename T> inline void gaussian(T* x, int size, std::mt19937 &generator, T deviation = 1.0, T mean = 0.0)
