@@ -402,7 +402,191 @@ private:
     return true;
   }
 
-public:
+private: 
+
+  // Private merge sort function which sorts by eigenvalue, also rearranged eigenvectors.
+  bool merge_sort(complex<double>* sort_evals, complex<double>** sort_evecs, complex<double>* temp_evals, complex<double>** temp_evecs, int size, arpack_spectrum_piece spectrum_sort, bool has_evecs)
+  {
+    if (spectrum_sort == ARPACK_NONE)
+      return false;
+
+    if (size == 1) // trivial
+    {
+      return true;
+    }
+    if (size == 2) // trivial
+    {
+      switch (spectrum_sort)
+      {
+        case ARPACK_NONE:
+          return false;
+        case ARPACK_SMALLEST_MAGNITUDE:
+          if (std::abs(sort_evals[1]) < std::abs(sort_evals[0]))
+          {
+            std::swap(sort_evals[1], sort_evals[0]);
+            if (has_evecs) std::swap(sort_evecs[1], sort_evecs[0]);
+          }
+          break;
+        case ARPACK_LARGEST_MAGNITUDE:
+          if (std::abs(sort_evals[1]) > std::abs(sort_evals[0]))
+          {
+            std::swap(sort_evals[1], sort_evals[0]);
+            if (has_evecs) std::swap(sort_evecs[1], sort_evecs[0]);
+          }
+          break;
+        case ARPACK_SMALLEST_REAL:
+          if (std::real(sort_evals[1]) < std::real(sort_evals[0]))
+          {
+            std::swap(sort_evals[1], sort_evals[0]);
+            if (has_evecs) std::swap(sort_evecs[1], sort_evecs[0]);
+          }
+          break;
+        case ARPACK_LARGEST_REAL:
+          if (std::real(sort_evals[1]) > std::real(sort_evals[0]))
+          {
+            std::swap(sort_evals[1], sort_evals[0]);
+            if (has_evecs) std::swap(sort_evecs[1], sort_evecs[0]);
+          }
+          break;
+        case ARPACK_SMALLEST_IMAGINARY:
+          if (std::imag(sort_evals[1]) < std::imag(sort_evals[0]))
+          {
+            std::swap(sort_evals[1], sort_evals[0]);
+            if (has_evecs) std::swap(sort_evecs[1], sort_evecs[0]);
+          }
+          break;
+        case ARPACK_LARGEST_IMAGINARY:
+          if (std::imag(sort_evals[1]) > std::imag(sort_evals[0]))
+          {
+            std::swap(sort_evals[1], sort_evals[0]);
+            if (has_evecs) std::swap(sort_evecs[1], sort_evecs[0]);
+          }
+          break;
+        default:
+          return false;                                     
+          break;
+      }
+      return true;
+    }
+
+    // recurse.
+    if (!merge_sort(sort_evals, sort_evecs, temp_evals, temp_evecs, size/2, spectrum_sort, has_evecs))
+      return false;
+
+    if (!merge_sort(sort_evals + size/2, sort_evecs + size/2, temp_evals + size/2, temp_evecs + size/2, size - size/2, spectrum_sort, has_evecs))
+      return false;
+
+    // merge
+    int curr1 = 0;
+    int curr2 = size/2;
+    int currtmp = 0;
+
+    while (curr1 < size/2 && curr2 < size)
+    {
+      switch (spectrum_sort)
+      {
+        case ARPACK_NONE:
+          return false;
+        case ARPACK_SMALLEST_MAGNITUDE:
+          if (std::abs(sort_evals[curr1]) < std::abs(sort_evals[curr2]))
+          {
+            temp_evals[currtmp++] = sort_evals[curr1++];
+            if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr1-1];
+          }
+          else
+          {
+            temp_evals[currtmp++] = sort_evals[curr2++];
+            if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr2-1]; 
+          }
+          break;
+        case ARPACK_LARGEST_MAGNITUDE:
+          if (std::abs(sort_evals[curr1]) > std::abs(sort_evals[curr2]))
+          {
+            temp_evals[currtmp++] = sort_evals[curr1++];
+            if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr1-1];
+          }
+          else
+          {
+            temp_evals[currtmp++] = sort_evals[curr2++];
+            if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr2-1]; 
+          }
+          break;
+        case ARPACK_SMALLEST_REAL:
+          if (std::real(sort_evals[curr1]) < std::real(sort_evals[curr2]))
+          {
+            temp_evals[currtmp++] = sort_evals[curr1++];
+            if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr1-1];
+          }
+          else
+          {
+            temp_evals[currtmp++] = sort_evals[curr2++];
+            if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr2-1]; 
+          }
+          break;
+        case ARPACK_LARGEST_REAL:
+          if (std::real(sort_evals[curr1]) > std::real(sort_evals[curr2]))
+          {
+            temp_evals[currtmp++] = sort_evals[curr1++];
+            if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr1-1];
+          }
+          else
+          {
+            temp_evals[currtmp++] = sort_evals[curr2++];
+            if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr2-1]; 
+          }
+          break;
+        case ARPACK_SMALLEST_IMAGINARY:
+          if (std::imag(sort_evals[curr1]) < std::imag(sort_evals[curr2]))
+          {
+            temp_evals[currtmp++] = sort_evals[curr1++];
+            if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr1-1];
+          }
+          else
+          {
+            temp_evals[currtmp++] = sort_evals[curr2++];
+            if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr2-1]; 
+          }
+          break;
+        case ARPACK_LARGEST_IMAGINARY:
+          if (std::imag(sort_evals[curr1]) > std::imag(sort_evals[curr2]))
+          {
+            temp_evals[currtmp++] = sort_evals[curr1++];
+            if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr1-1];
+          }
+          else
+          {
+            temp_evals[currtmp++] = sort_evals[curr2++];
+            if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr2-1]; 
+          }
+          break;
+        default:
+          return false;                                     
+          break;
+      }
+    }
+
+    while (curr1 < size/2)
+    {
+      temp_evals[currtmp++] = sort_evals[curr1++];
+      if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr1-1];
+    }
+
+    while (curr2 < size)
+    {
+      temp_evals[currtmp++] = sort_evals[curr2++];
+      if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr2-1];
+    }
+
+    for (int i = 0; i < size; i++)
+    {
+      sort_evals[i] = temp_evals[i];
+      if (has_evecs) sort_evecs[i] = temp_evecs[i];
+    }
+
+    return true;
+  }
+
+  public:
 
   // Prepare the eigensystem with some specific properties, or the defaults. 
   bool prepare_eigensystem(arpack_spectrum_piece in_spec_piece = ARPACK_NONE, int in_ev = 0, int in_cv = 0)
@@ -557,67 +741,20 @@ public:
     }
 
     // Sort if we're supposed to.
-    // Should make this a merge sort. 
     if (spectrum_sort != ARPACK_NONE)
     {
-      // Sort eigenvalues.
-      for (int i = 0; i < ev; i++)
+      // temp memory.
+      complex<double>* temp_evals = new complex<double>[ev];
+      complex<double>** temp_evecs = new complex<double>*[ev];
+      if (!merge_sort(eigvals, eigvecs, temp_evals, temp_evecs, ev, spectrum_sort, (bool)(eigvecs != 0)))
       {
-        for (int j = 0; j < ev-1; j++)
-        {
-          switch (spectrum_sort)
-          {
-            case ARPACK_NONE:
-              break;
-            case ARPACK_SMALLEST_MAGNITUDE:
-              if (std::abs(eigvals[j+1]) < std::abs(eigvals[j]))
-              {
-                std::swap(eigvals[j+1], eigvals[j]);
-                if (eigvecs != 0) { std::swap(eigvecs[j+1], eigvecs[j]); }
-              }
-              break;
-            case ARPACK_LARGEST_MAGNITUDE:
-              if (std::abs(eigvals[j+1]) > std::abs(eigvals[j]))
-              {
-                std::swap(eigvals[j+1], eigvals[j]);
-                if (eigvecs != 0) { std::swap(eigvecs[j+1], eigvecs[j]); }
-              }
-              break;
-            case ARPACK_SMALLEST_REAL:
-              if (std::real(eigvals[j+1]) < std::real(eigvals[j]))
-              {
-                std::swap(eigvals[j+1], eigvals[j]);
-                if (eigvecs != 0) { std::swap(eigvecs[j+1], eigvecs[j]); }
-              }
-              break;
-            case ARPACK_LARGEST_REAL:
-              if (std::real(eigvals[j+1]) > std::real(eigvals[j]))
-              {
-                std::swap(eigvals[j+1], eigvals[j]);
-                if (eigvecs != 0) { std::swap(eigvecs[j+1], eigvecs[j]); }
-              }
-              break;
-            case ARPACK_SMALLEST_IMAGINARY:
-              if (std::imag(eigvals[j+1]) < std::imag(eigvals[j]))
-              {
-                std::swap(eigvals[j+1], eigvals[j]);
-                if (eigvecs != 0) { std::swap(eigvecs[j+1], eigvecs[j]); }
-              }
-              break;
-            case ARPACK_LARGEST_IMAGINARY:
-              if (std::imag(eigvals[j+1]) > std::imag(eigvals[j]))
-              {
-                std::swap(eigvals[j+1], eigvals[j]);
-                if (eigvecs != 0) { std::swap(eigvecs[j+1], eigvecs[j]); }
-              }
-              break;
-            default:
-              break;
-          }
-        }
+        delete[] temp_evals;
+        delete[] temp_evecs;
+        return false;
       }
+      delete[] temp_evals;
+      delete[] temp_evecs;
     }
-
     return true; 
 
   }
