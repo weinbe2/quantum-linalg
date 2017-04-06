@@ -289,8 +289,6 @@ private:
       std::cout << "[ARPACK_ERROR]: \"arpack_dcn->internal_prepare\" cannot be used when ncv < nev+2.\n";
     }
 
-    std::cout << "ev " << in_ev << " cv " << in_cv << "\n";
-
     info_solve.iter = 0;
     info_solve.ops_count = 0;
     info_solve.n_conv = 0;
@@ -776,7 +774,75 @@ private:
 
   // SPECIAL function to get entire spectrum. Does not leave
   // system in a prepared state.
+  bool get_entire_eigensystem(complex<double>* eigvals, complex<double>** eigvecs, arpack_spectrum_piece spectrum_sort)
+  {
+    // Needs max_nev == n/2, max_ncv == n.
+    if (!entire_spectrum)
+      return false;
 
+    // Grab the relevant parts of the spectrum so they're pre-sorted.
+    arpack_spectrum_piece first_part, second_part;
+
+    switch (spectrum_sort)
+    {
+      case ARPACK_NONE:
+      case ARPACK_SMALLEST_MAGNITUDE:
+        first_part = ARPACK_SMALLEST_MAGNITUDE;
+        second_part = ARPACK_LARGEST_MAGNITUDE;
+        break;
+      case ARPACK_LARGEST_MAGNITUDE:
+        first_part = ARPACK_LARGEST_MAGNITUDE;
+        second_part = ARPACK_SMALLEST_MAGNITUDE;
+        break;
+       case ARPACK_SMALLEST_REAL:
+        first_part = ARPACK_SMALLEST_REAL;
+        second_part = ARPACK_LARGEST_REAL;
+        break;
+      case ARPACK_LARGEST_REAL:
+        first_part = ARPACK_LARGEST_REAL;
+        second_part = ARPACK_SMALLEST_REAL;
+        break;
+      case ARPACK_SMALLEST_IMAGINARY:
+        first_part = ARPACK_SMALLEST_IMAGINARY;
+        second_part = ARPACK_LARGEST_IMAGINARY;
+        break;
+      case ARPACK_LARGEST_IMAGINARY:
+        first_part = ARPACK_LARGEST_IMAGINARY;
+        second_part = ARPACK_SMALLEST_IMAGINARY;
+        break;
+      
+    }
+
+    if (!prepare_eigensystem(first_part, n/2, n))
+      return false;
+
+    if (!get_eigensystem(eigvals, eigvecs, spectrum_sort))
+      return false;
+
+    if (!prepare_eigensystem(second_part, n/2, n))
+      return false;
+
+    if (!get_eigensystem(eigvals + n/2, (eigvecs == 0) ? 0 : (eigvecs + n/2), spectrum_sort))
+      return false;
+
+    access_ready = false;
+    return true;
+  }
+
+  bool get_entire_eigensystem(complex<double>* eigvals, arpack_spectrum_piece spectrum_sort)
+  {
+    return get_entire_eigensystem(eigvals, 0, spectrum_sort);
+  }
+
+  bool get_entire_eigensystem(complex<double>* eigvals, complex<double>** eigvecs)
+  {
+    return get_entire_eigensystem(eigvals, eigvecs, ARPACK_NONE);
+  }
+
+  bool get_entire_eigensystem(complex<double>* eigvals)
+  {
+    return get_entire_eigensystem(eigvals, 0, ARPACK_NONE);
+  }
    
 };
 

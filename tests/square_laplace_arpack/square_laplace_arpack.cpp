@@ -39,11 +39,11 @@ int main(int argc, char** argv)
   // Create a random compact U(1) link.
   gauge_links = allocate_vector<complex<double>>(2*length*length);
   
-  constant_vector(gauge_links, 1.0, 2*length*length);
+  //constant_vector(gauge_links, 1.0, 2*length*length);
   // Remark: fills real and imaginary with gaussian numbers.
-  // double inv_variance = 6.0; // inverse of variance for gaussian non-compact U(1) links.
-  //gaussian(gauge_links, 2*length*length, generator, 1.0/inv_variance);
-  //polar(gauge_links, 2*length*length); // ignores imag part to make compact link.
+  double inv_variance = 1.0; // inverse of variance for gaussian non-compact U(1) links.
+  gaussian(gauge_links, 2*length*length, generator, 1.0/inv_variance);
+  polar(gauge_links, 2*length*length); // ignores imag part to make compact link.
   
   
   // Structure which gets passed to the function.
@@ -109,8 +109,33 @@ int main(int argc, char** argv)
   for (int i = 0; i < 5; i++)
     deallocate_vector(&evecs[i]);
 
+  delete[] evecs; 
   delete[] eigs;
   delete arpack;  
+
+  // Test getting the entire spectrum.
+  // If you don't pass in a max eigvals, cv, it prepares you for a full system solve.
+  arpack = new arpack_dcn(volume, max_iter, tol, square_laplacian_gauged, (void*)&lapstr);
+
+  eigs = new complex<double>[volume];
+  evecs = new complex<double>*[volume];
+  for (int i = 0; i < volume; i++)
+  {
+    evecs[i] = new complex<double>[volume];
+  }
+
+  arpack->get_entire_eigensystem(eigs, arpack_dcn::ARPACK_SMALLEST_MAGNITUDE);
+
+  for (int i = 0; i < volume; i++)
+    std::cout << "Eigenvalue " << i << " has value " << eigs[i] << "\n";
+
+  for (int i = 0; i < volume; i++)
+  {
+    delete[] evecs[i];
+  }
+
+  delete[] evecs;
+  delete[] eigs;
 
   deallocate_vector(&lhs);
   deallocate_vector(&rhs);
