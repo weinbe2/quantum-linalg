@@ -45,6 +45,19 @@ template <typename T, typename U = T> inline void constant_vector(T* x, U val, i
   }
 }
 
+// Special strided constant, follows blas conventions.
+template<typename T, typename U = T> inline void constant_vector_blas(T* x, int xstep, U val, int size)
+{
+  if (xstep == 1) { constant_vector(x, val, size); return; }
+
+  int ix = 0;
+  for (int i = 0; i < size; i++)
+  {
+    x[ix] = static_cast<T>(val);
+    ix += xstep;
+  }
+}
+
 // Special strided constant.
 template<typename T, typename U = T> inline void constant_vector_stride(T* x, U val, int size, int start, int stride)
 {
@@ -139,6 +152,21 @@ template<typename T, typename U = T> inline void caxy(U a, T* x, T* y, int size)
   }
 }
 
+// Implemented strided caxy, y = a*x, where the 'x' and 'y' hops are specified.
+// Matches original blas specification.
+template<typename T, typename U = T> inline void caxy_blas(U a, T* x, int xstep, T* y, int ystep, int size)
+{
+  if (xstep == 1 && ystep == 1) { caxy(a, x, y, size); return; }
+
+  int ix = 0, iy = 0;
+  for (int i = 0; i < size; i++)
+  {
+    y[iy] = a*x[ix];
+    ix += xstep;
+    iy += ystep;
+  }
+}
+
 // Implement cxpy, y += x.
 template<typename T> inline void cxpy(T* x, T* y, int size)
 {
@@ -163,6 +191,21 @@ template<typename T, typename U = T> inline void caxpy(U a, T* x, T* y, int size
   for (int i = 0; i < size; i++)
   {
     y[i] += a*x[i];
+  }
+}
+
+// Implemented strided caxpy, y += a*x, where the 'x' and 'y' hops are specified.
+// Matches original blas specification.
+template<typename T, typename U = T> inline void caxpy_blas(U a, T* x, int xstep, T* y, int ystep, int size)
+{
+  if (xstep == 1 && ystep == 1) { caxpy(a, x, y, size); return; }
+
+  int ix = 0, iy = 0;
+  for (int i = 0; i < size; i++)
+  {
+    y[iy] += a*x[ix];
+    ix += xstep;
+    iy += ystep;
   }
 }
 
