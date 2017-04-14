@@ -1,16 +1,14 @@
 // Copyright (c) 2017 Evan S Weinberg
 // Interface for finding the eigenvalues of a generic
-// unstructured complex matrix using ARPACK.
+// real, symmetric, positive definite matrix with ARPACK.
 // Based on a reference interface from Alexei Strelchenko
 // Hoping to extend this to different precisions,
-// real matrices as well as complex matrices, unstructured
-// matrices.
 // Reference to ARPACK functions:
-// ZNAUPD: https://github.com/pv/arpack-ng/blob/master/SRC/znaupd.f
-// ZNEUPD: https://github.com/pv/arpack-ng/blob/master/SRC/zneupd.f
+// DSAUPD: https://github.com/pv/arpack-ng/blob/master/SRC/dsaupd.f
+// DSEUPD: https://github.com/pv/arpack-ng/blob/master/SRC/dseupd.f
 
-#ifndef QLINALG_INTERFACE_ARPACK
-#define QLINALG_INTERFACE_ARPACK
+#ifndef QLINALG_INTERFACE_ARPACK_RSYM
+#define QLINALG_INTERFACE_ARPACK_RSYM
 
 #include <iostream>
 #include <complex>
@@ -29,20 +27,19 @@ extern "C" {
   // a matrix-vector operation. These will get wrapped
   // in an interface quickly. 
 
-  // double precision complex
-  extern int ARPACK(znaupd) (int *ido, char *bmat, int *n, char *which,
-                        int *nev, double *tol, complex<double> *resid,
-                        int *ncv, complex<double> *v, int *ldv, 
-                        int *iparam, int *ipntr, complex<double> *workd,
-                        complex<double> *workl, int *lworkl, double *rwork,
-                        int *info);
+  // double precision real symmetric posdef. 
+  extern int ARPACK(dsaupd) (int *ido, char *bmat, int *n, char *which,
+                        int *nev, double *tol, double *resid,
+                        int *ncv, double *v, int *ldv, 
+                        int *iparam, int *ipntr, double *workd,
+                        double *workl, int *lworkl, int *info);
 
-  // double precision complex
-  extern int ARPACK(zneupd) (int *comp_evecs, char *howmany, int *select, complex<double> *evals, 
-                        complex<double> *v, int *ldv, complex<double> *sigma, complex<double> *workev, 
-                        char *bmat, int *n, char *which, int *nev, double *tol, complex<double> *resid, 
-                        int *ncv, complex<double> *v1, int *ldv1, int *iparam, int *ipntr, 
-                        complex<double> *workd, complex<double> *workl, int *lworkl, double *rwork, int *info);
+  // double precision real symmetric posdef.
+  extern int ARPACK(dseupd) (int *comp_evecs, char *howmany, int *select, double *evals, 
+                        double *v, int *ldv, double *sigma,  
+                        char *bmat, int *n, char *which, int *nev, double *tol, double *resid, 
+                        int *ncv, double *v1, int *ldv1, int *iparam, int *ipntr, 
+                        double *workd, double *workl, int *lworkl, int *info);
 
 
 
@@ -59,10 +56,10 @@ struct arpack_info
     int iter; // number of Arnoldi terations (IPARAM(3))
     int n_conv; // number of converged eigenvalues (IPARAM(5))
     int ops_count; // number of OP*x applications (IPARAM(9))
-    int znaupd_code; // znaupd error code.
+    int dsaupd_code; // znaupd error code.
 
    // Default Constructor
-  arpack_info() : success(false), iter(0), n_conv(0), ops_count(0), znaupd_code(0)
+  arpack_info() : success(false), iter(0), n_conv(0), ops_count(0), dsaupd_code(0)
   { ; }
 
   // Copy constructor.
@@ -72,7 +69,7 @@ struct arpack_info
     iter = obj.iter;
     n_conv = obj.n_conv;
     ops_count = obj.ops_count;
-    znaupd_code = obj.znaupd_code; 
+    dsaupd_code = obj.dsaupd_code; 
   }
 
   // Assignment operator.
@@ -82,7 +79,7 @@ struct arpack_info
     iter = obj.iter;
     n_conv = obj.n_conv;
     ops_count = obj.ops_count;
-    znaupd_code = obj.znaupd_code;
+    dsaupd_code = obj.dsaupd_code;
     return *this;
   }
 
@@ -96,7 +93,7 @@ struct arpack_info
 ******************************/
 
 // double precision complex general struct.
-class arpack_dcn
+class arpack_dsn
 {
 public:
 
@@ -108,14 +105,13 @@ public:
     ARPACK_SMALLEST_MAGNITUDE,
     ARPACK_LARGEST_REAL,
     ARPACK_SMALLEST_REAL,
-    ARPACK_LARGEST_IMAGINARY,
-    ARPACK_SMALLEST_IMAGINARY,
+    ARPACK_BEGINNING_END,
   };
 
 private:
   // Get rid of copy, assignment operator.
-  arpack_dcn(arpack_dcn const &);
-  arpack_dcn& operator=(arpack_dcn const &);
+  arpack_dsn(arpack_dsn const &);
+  arpack_dsn& operator=(arpack_dsn const &);
 
    // Scalar types which set memory allocation.
   int n; // imum possible dimension of the matrix.
@@ -133,26 +129,23 @@ private:
   /**************************************************************
   // Vectors and variables that get passed to ARPACK functions. *
   **************************************************************/
-  std::complex<double>* v; // 2d array of size [ldv][ncv]. Holds eigenvectors.
-  std::complex<double>* d; // 1d array of size [ncv]. Holds eigenvalues.
-  std::complex<double>* workl; // 1d array of size 3*ncv**2
+  double* v; // 2d array of size [ldv][ncv]. Holds eigenvectors.
+  double* d; // 1d array of size [ncv]. Holds eigenvalues.
+  double* workl; // 1d array of size 3*ncv**2
                                 // + 5*ncv.
                                 // Workspace. Size suggested by znsimp.f.
-  std::complex<double>* workd; // 1d array of size 3*n.
+  double* workd; // 1d array of size 3*n.
                                 // This space gets used in reverse feedback to
                                 // hold rhs = A*lhs.
-  std::complex<double>* resid; // 1d array of size n.
+  double* resid; // 1d array of size n.
                                 // This holds internal residual vectors.       
                                 // This is normally zero at the start, but it
                                 // can be set to non-zero to choose an initial
                                 // guess vector.
-  std::complex<double>* workev; // Working space. 1d array of size 2*ncv.
-  double* rwork; // Working space. 1d array of size ncv.
-  double* rd; // Working space. 2d array of size [ncv][3];
   int* select; // Should be a logical. 
 
   int iparam[11]; // Various parameters which get passed in.
-  int ipntr[14]; // I believe ARPACK uses this to maintain its own state?
+  int ipntr[11]; // I believe ARPACK uses this to maintain its own state?
 
   char which[3]; // used to specify portion of spectrum desired.
   char bmat; // Used to specify that this is a regular, not generalized, eigenvalue problem.
@@ -183,17 +176,17 @@ private:
   int cv; 
 
   // Matrix pointer and extra data.
-  void (*matrix_vector)(complex<double>*,complex<double>*,void*);
+  void (*matrix_vector)(double*,double*,void*);
   void* extra_info;
 
 public:
 
   // Allocate memory for a certain matrix size, number of eigenvalues,
   // number of internal values. 
-  arpack_dcn(int n, int maxitr, double tol, void (*matrix_vector)(complex<double>*,complex<double>*,void*), void* extra_info, int nev, int ncv)
+  arpack_dsn(int n, int maxitr, double tol, void (*matrix_vector)(double*,double*,void*), void* extra_info, int nev, int ncv)
    : n(n), max_nev(nev), max_ncv(ncv), ldv(n),
-     v(0), d(0), workl(0), workd(0), resid(0), workev(0),
-     rwork(0), rd(0), select(0), is_allocated(false), entire_spectrum(false), 
+     v(0), d(0), workl(0), workd(0), resid(0),
+     select(0), is_allocated(false), entire_spectrum(false), 
      maxitr(maxitr), tol(tol), ev(0), cv(0), 
      matrix_vector(matrix_vector), extra_info(extra_info)
   {
@@ -210,15 +203,12 @@ public:
     }
 
     // Allocate fixed memory arrays.
-    v = allocate_vector<std::complex<double> >(ldv*ncv);
-    d = allocate_vector<std::complex<double> >(ncv);
-    workl = allocate_vector<std::complex<double> >(3*ncv*ncv+5*ncv);
-    workd = allocate_vector<std::complex<double> >(3*n);
-    workev = allocate_vector<std::complex<double> >(2*ncv);
-    resid = allocate_vector<std::complex<double> >(n);
-    rwork = allocate_vector<double>(ncv);
-    rd = allocate_vector<double>(3*ncv);
-    select = allocate_vector<int>(n);
+    v = allocate_vector<double>(ldv*ncv);
+    d = allocate_vector<double >(2*ncv);
+    workl = allocate_vector<double >(ncv*(ncv+8));
+    workd = allocate_vector<double >(3*n);
+    resid = allocate_vector<double >(n);
+    select = allocate_vector<int>(ncv);
 
     is_allocated = true;
     if (nev == n/2 && ncv == n)
@@ -226,12 +216,12 @@ public:
   }
 
   // Allocate memory for a solve with specific nev, "heuristic" ncv.
-  arpack_dcn(int n, int maxitr, double tol, void (*matrix_vector)(complex<double>*,complex<double>*,void*), void* extra_info, int nev)
-   : arpack_dcn(n, maxitr, tol, matrix_vector, extra_info, nev, std::min(n, 2*nev + nev/2)) { ; }
+  arpack_dsn(int n, int maxitr, double tol, void (*matrix_vector)(double*,double*,void*), void* extra_info, int nev)
+   : arpack_dsn(n, maxitr, tol, matrix_vector, extra_info, nev, std::min(n, 2*nev + nev/2)) { ; }
 
   // Allocate memory for a solve of the entire spectrum.
-  arpack_dcn(int n, int maxitr, double tol, void (*matrix_vector)(complex<double>*,complex<double>*,void*), void* extra_info)
-   : arpack_dcn(n, maxitr, tol, matrix_vector, extra_info, n/2, n)
+  arpack_dsn(int n, int maxitr, double tol, void (*matrix_vector)(double*,double*,void*), void* extra_info)
+   : arpack_dsn(n, maxitr, tol, matrix_vector, extra_info, n/2, n)
   {
     entire_spectrum = true;
   }
@@ -239,7 +229,7 @@ public:
 
 
   // Free memory.
-  ~arpack_dcn()
+  ~arpack_dsn()
   {
     if (is_allocated)
     {
@@ -247,10 +237,7 @@ public:
       if (d != 0) { deallocate_vector(&d); d = 0; }
       if (workl != 0) { deallocate_vector(&workl); workl = 0; }
       if (workd != 0) { deallocate_vector(&workd); workd = 0; }
-      if (workev != 0) { deallocate_vector(&workev); workev = 0; }
       if (resid != 0) { deallocate_vector(&resid); resid = 0; }
-      if (rwork != 0) { deallocate_vector(&rwork); rwork = 0; }
-      if (rd != 0) { deallocate_vector(&rd); rd = 0; }
       if (select != 0) { deallocate_vector(&select); select = 0; }
     }
   }
@@ -262,6 +249,13 @@ private:
   // to return eigenvalues, eigenvectors.
   bool internal_prepare(arpack_spectrum_piece in_spec_piece, int in_ev, int in_cv)
   {
+
+    info_solve.iter = 0;
+    info_solve.ops_count = 0;
+    info_solve.n_conv = 0;
+    info_solve.dsaupd_code = 0;
+    info_solve.success = false; // bad unless proven otherwise.
+
     if (!is_allocated)
     {
       std::cout << "[ARPACK_ERROR]: \"arpack_dcn->internal_prepare\" cannot be called as internal structures are not allocated.\n";
@@ -289,18 +283,12 @@ private:
       std::cout << "[ARPACK_ERROR]: \"arpack_dcn->internal_prepare\" cannot be used when ncv < nev+2.\n";
     }
 
-    info_solve.iter = 0;
-    info_solve.ops_count = 0;
-    info_solve.n_conv = 0;
-    info_solve.znaupd_code = 0;
-    info_solve.success = false; // bad unless proven otherwise.
-
     // Begin!
     bmat = 'I'; // This is a standard problem, as opposed
                // to a generalized eigenvalue problem.
    
     // Stopping rules + initial conditions before calling DSAUPD
-    lworkl = 3*in_cv*in_cv+5*in_cv; // Trusting arpack here.
+    lworkl = in_cv*(in_cv+8); // Trusting arpack here.
     ido = 0; // This is the reverse communication parameter 
             // from DSAUPD. Each call changes the value of this
             // parameter, and based on its value something must
@@ -331,20 +319,17 @@ private:
         strcpy(which, "SM");
         break;
       case ARPACK_LARGEST_REAL:
-        strcpy(which, "LR");
+        strcpy(which, "LA");
         break;
       case ARPACK_SMALLEST_REAL:
-        strcpy(which, "SR");
+        strcpy(which, "SA");
         break;
-      case ARPACK_LARGEST_IMAGINARY:
-        strcpy(which, "LI");
-        break;
-      case ARPACK_SMALLEST_IMAGINARY:
-        strcpy(which, "SI");
+      case ARPACK_BEGINNING_END:
+        strcpy(which, "BE");
         break;
       case ARPACK_NONE:
       default:
-        std::cout << "[ARPACK_ERROR]: \"arpack_dcn->internal_prepare\" given an inappropriate eigenvalue type.\n";
+        std::cout << "[ARPACK_ERROR]: \"arpack_dsn->internal_prepare\" given an inappropriate eigenvalue type.\n";
         return false; 
     }
    
@@ -353,10 +338,10 @@ private:
     {
       // Call dsaupd!
 
-      ARPACK(znaupd)(&ido, &bmat, &n, which, &in_ev, &tol,
+      ARPACK(dsaupd)(&ido, &bmat, &n, which, &in_ev, &tol,
                    resid, &in_cv, v, &ldv,
                    (int*)iparam, (int*)ipntr, workd,
-                   workl, &lworkl, rwork, &info);
+                   workl, &lworkl, &info);
 
       // Check for errors!                   
       if (info != 0)
@@ -364,7 +349,8 @@ private:
         info_solve.iter = iparam[2];
         info_solve.ops_count = iparam[8];
         info_solve.n_conv = iparam[4];
-        info_solve.znaupd_code = info;
+        info_solve.dsaupd_code = info;
+        cout << "[ARPACK]: Error in dsaupd.\n";
         return false; 
       }
 
@@ -386,7 +372,6 @@ private:
     info_solve.iter = iparam[2];
     info_solve.ops_count = iparam[8];
     info_solve.n_conv = iparam[4];
-    info_solve.success = true;
 
     if (ierr != 0)
     {
@@ -397,6 +382,7 @@ private:
     ev = in_ev;
     cv = in_cv;
     spec_piece = in_spec_piece; 
+    info_solve.success = true;
 
     return true;
   }
@@ -404,7 +390,7 @@ private:
 private: 
 
   // Private merge sort function which sorts by eigenvalue, also rearranged eigenvectors.
-  bool merge_sort(complex<double>* sort_evals, complex<double>** sort_evecs, complex<double>* temp_evals, complex<double>** temp_evecs, int size, arpack_spectrum_piece spectrum_sort, bool has_evecs)
+  bool merge_sort(double* sort_evals, double** sort_evecs, double* temp_evals, double** temp_evecs, int size, arpack_spectrum_piece spectrum_sort, bool has_evecs)
   {
     if (spectrum_sort == ARPACK_NONE)
       return false;
@@ -434,6 +420,7 @@ private:
           }
           break;
         case ARPACK_SMALLEST_REAL:
+        case ARPACK_BEGINNING_END:
           if (std::real(sort_evals[1]) < std::real(sort_evals[0]))
           {
             std::swap(sort_evals[1], sort_evals[0]);
@@ -442,20 +429,6 @@ private:
           break;
         case ARPACK_LARGEST_REAL:
           if (std::real(sort_evals[1]) > std::real(sort_evals[0]))
-          {
-            std::swap(sort_evals[1], sort_evals[0]);
-            if (has_evecs) std::swap(sort_evecs[1], sort_evecs[0]);
-          }
-          break;
-        case ARPACK_SMALLEST_IMAGINARY:
-          if (std::imag(sort_evals[1]) < std::imag(sort_evals[0]))
-          {
-            std::swap(sort_evals[1], sort_evals[0]);
-            if (has_evecs) std::swap(sort_evecs[1], sort_evecs[0]);
-          }
-          break;
-        case ARPACK_LARGEST_IMAGINARY:
-          if (std::imag(sort_evals[1]) > std::imag(sort_evals[0]))
           {
             std::swap(sort_evals[1], sort_evals[0]);
             if (has_evecs) std::swap(sort_evecs[1], sort_evecs[0]);
@@ -511,7 +484,8 @@ private:
           }
           break;
         case ARPACK_SMALLEST_REAL:
-          if (std::real(sort_evals[curr1]) < std::real(sort_evals[curr2]))
+        case ARPACK_BEGINNING_END:
+          if (sort_evals[curr1] < sort_evals[curr2])
           {
             temp_evals[currtmp++] = sort_evals[curr1++];
             if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr1-1];
@@ -523,31 +497,7 @@ private:
           }
           break;
         case ARPACK_LARGEST_REAL:
-          if (std::real(sort_evals[curr1]) > std::real(sort_evals[curr2]))
-          {
-            temp_evals[currtmp++] = sort_evals[curr1++];
-            if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr1-1];
-          }
-          else
-          {
-            temp_evals[currtmp++] = sort_evals[curr2++];
-            if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr2-1]; 
-          }
-          break;
-        case ARPACK_SMALLEST_IMAGINARY:
-          if (std::imag(sort_evals[curr1]) < std::imag(sort_evals[curr2]))
-          {
-            temp_evals[currtmp++] = sort_evals[curr1++];
-            if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr1-1];
-          }
-          else
-          {
-            temp_evals[currtmp++] = sort_evals[curr2++];
-            if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr2-1]; 
-          }
-          break;
-        case ARPACK_LARGEST_IMAGINARY:
-          if (std::imag(sort_evals[curr1]) > std::imag(sort_evals[curr2]))
+          if (sort_evals[curr1] > sort_evals[curr2])
           {
             temp_evals[currtmp++] = sort_evals[curr1++];
             if (has_evecs) temp_evecs[currtmp-1] = sort_evecs[curr1-1];
@@ -687,7 +637,7 @@ private:
 
   // There's a special level of hell for function pointers...
   // I should use a typedef.
-  void (*check_matrix_vector())(complex<double>*,complex<double>*,void*)
+  void (*check_matrix_vector())(double*,double*,void*)
   {
     return matrix_vector;
   }
@@ -702,7 +652,7 @@ private:
   // fcn to grab eigenvalues (and optionally eigenvectors) if system is prepared.
   // Sorts eigenvalues (and eigenvectors) via enum, optionally.
   // If sort is, for ex, ARPACK_SMALLEST_MAGNITUDE, the smallest mag eigenvalue comes first.
-  bool get_eigensystem(complex<double>* eigvals, complex<double>** eigvecs, arpack_spectrum_piece spectrum_sort)
+  bool get_eigensystem(double* eigvals, double** eigvecs, arpack_spectrum_piece spectrum_sort)
   {
     if (!access_ready)
     {
@@ -712,14 +662,14 @@ private:
     // Specify a few things...
     hwmny = 'A'; // Get Ritz vectors (assuming we want eigenvectors)
     rvec = (eigvecs == 0) ? 0 : 1;
-    complex<double> sigma = 0; // does not matter b/c we're not doing a shift-invert.
+    double sigma = 0; // does not matter b/c we're not doing a shift-invert.
 
-    ARPACK(zneupd)(&rvec, &hwmny, select, d,
-                      v,  &ldv, &sigma, (complex<double>*)workev,
+    ARPACK(dseupd)(&rvec, &hwmny, select, d,
+                      v,  &ldv, &sigma,
                       &bmat, &n, which,
                       &ev, &tol, resid, &cv, v,
                       &ldv, (int*)iparam, (int*)ipntr, workd,
-                      workl, &lworkl, rwork, &ierr);
+                      workl, &lworkl, &ierr);
 
     // Check for errors
     if (ierr != 0)
@@ -743,8 +693,8 @@ private:
     if (spectrum_sort != ARPACK_NONE)
     {
       // temp memory.
-      complex<double>* temp_evals = new complex<double>[ev];
-      complex<double>** temp_evecs = new complex<double>*[ev];
+      double* temp_evals = new double[ev];
+      double** temp_evecs = new double*[ev];
       if (!merge_sort(eigvals, eigvecs, temp_evals, temp_evecs, ev, spectrum_sort, (bool)(eigvecs != 0)))
       {
         delete[] temp_evals;
@@ -758,24 +708,24 @@ private:
 
   }
 
-  bool get_eigensystem(complex<double>* eigvals, arpack_spectrum_piece spectrum_sort)
+  bool get_eigensystem(double* eigvals, arpack_spectrum_piece spectrum_sort)
   {
     return get_eigensystem(eigvals, 0, spectrum_sort);
   }
 
-  bool get_eigensystem(complex<double>* eigvals, complex<double>** eigvecs)
+  bool get_eigensystem(double* eigvals, double** eigvecs)
   {
     return get_eigensystem(eigvals, eigvecs, ARPACK_NONE);
   }
 
-  bool get_eigensystem(complex<double>* eigvals)
+  bool get_eigensystem(double* eigvals)
   {
     return get_eigensystem(eigvals, 0, ARPACK_NONE);
   }
 
   // SPECIAL function to get entire spectrum. Does not leave
   // system in a prepared state.
-  bool get_entire_eigensystem(complex<double>* eigvals, complex<double>** eigvecs, arpack_spectrum_piece spectrum_sort)
+  bool get_entire_eigensystem(double* eigvals, double** eigvecs, arpack_spectrum_piece spectrum_sort)
   {
     // Needs max_nev == n/2, max_ncv == n.
     if (!entire_spectrum)
@@ -788,6 +738,7 @@ private:
     {
       case ARPACK_NONE:
       case ARPACK_SMALLEST_MAGNITUDE:
+      case ARPACK_BEGINNING_END:
         first_part = ARPACK_SMALLEST_MAGNITUDE;
         second_part = ARPACK_LARGEST_MAGNITUDE;
         break;
@@ -803,48 +754,51 @@ private:
         first_part = ARPACK_LARGEST_REAL;
         second_part = ARPACK_SMALLEST_REAL;
         break;
-      case ARPACK_SMALLEST_IMAGINARY:
-        first_part = ARPACK_SMALLEST_IMAGINARY;
-        second_part = ARPACK_LARGEST_IMAGINARY;
-        break;
-      case ARPACK_LARGEST_IMAGINARY:
-        first_part = ARPACK_LARGEST_IMAGINARY;
-        second_part = ARPACK_SMALLEST_IMAGINARY;
-        break;
-      
     }
 
     if (!prepare_eigensystem(first_part, n/2, n))
+    {
+      cout << "[ARPACK]: Failed to prepare first half of spectrum\n";
       return false;
+    }
 
     if (!get_eigensystem(eigvals, eigvecs, spectrum_sort))
+    {
+      cout << "[ARPACK]: Failed to obtain first half of spectrum\n";
       return false;
+    }
 
     if (!prepare_eigensystem(second_part, n/2, n))
+    {
+      cout << "[ARPACK]: Failed to prepare second half of spectrum\n";
       return false;
+    }
 
     if (!get_eigensystem(eigvals + n/2, (eigvecs == 0) ? 0 : (eigvecs + n/2), spectrum_sort))
+    {
+      cout << "[ARPACK]: Failed to obtain second half of spectrum\n";
       return false;
+    }
 
     access_ready = false;
     return true;
   }
 
-  bool get_entire_eigensystem(complex<double>* eigvals, arpack_spectrum_piece spectrum_sort)
+  bool get_entire_eigensystem(double* eigvals, arpack_spectrum_piece spectrum_sort)
   {
     return get_entire_eigensystem(eigvals, 0, spectrum_sort);
   }
 
-  bool get_entire_eigensystem(complex<double>* eigvals, complex<double>** eigvecs)
+  bool get_entire_eigensystem(double* eigvals, double** eigvecs)
   {
     return get_entire_eigensystem(eigvals, eigvecs, ARPACK_NONE);
   }
 
-  bool get_entire_eigensystem(complex<double>* eigvals)
+  bool get_entire_eigensystem(double* eigvals)
   {
     return get_entire_eigensystem(eigvals, 0, ARPACK_NONE);
   }
    
 };
 
-#endif // QLINALG_INTERFACE_ARPACK
+#endif // QLINALG_INTERFACE_ARPACK_RSYM
