@@ -29,12 +29,27 @@ template<typename T> inline void deallocate_vector(T** x)
 // Zeroes a vector.
 template<typename T> inline void zero_vector(T* x, int size)
 {
+  const T zero = static_cast<T>(0.0);
   for (int i = 0; i < size; i++)
   {
-    x[i] = static_cast<T>(0.0);
+    x[i] = zero;
   }
 }
 
+// Special strided zero, follows blas conventions.
+template<typename T> inline void zero_vector_blas(T* x, int xstep, int size)
+{
+  if (xstep == 1) { zero_vector(x, size); return; }
+
+  const T zero = static_cast<T>(0.0);
+
+  int ix = 0;
+  for (int i = 0; i < size; i++)
+  {
+    x[ix] = zero;
+    ix += xstep;
+  }
+}
 
 // Assign a vector to a constant everywhere.
 template <typename T, typename U = T> inline void constant_vector(T* x, U val, int size)
@@ -84,7 +99,18 @@ template <typename T> inline void gaussian(complex<T>* x, int size, std::mt19937
   std::normal_distribution<> dist(0.0, deviation);
   for (int i = 0; i < size; i++)
   {
-  x[i] = std::complex<T>(real(mean) + static_cast<T>(dist(generator)), imag(mean) + static_cast<T>(dist(generator)));
+    x[i] = std::complex<T>(real(mean) + static_cast<T>(dist(generator)), imag(mean) + static_cast<T>(dist(generator)));
+  }
+}
+
+// Random gaussian vector, random in real, zero in imag.
+template <typename T> inline void gaussian_real(complex<T>* x, int size, std::mt19937 &generator, T deviation = 1.0, complex<T> mean = 0.0)
+{
+  // Generate a normal distribution.
+  std::normal_distribution<> dist(0.0, deviation);
+  for (int i = 0; i < size; i++)
+  {
+    x[i] = std::complex<T>(real(mean) + static_cast<T>(dist(generator)), 0.0);
   }
 }
 
@@ -112,7 +138,16 @@ template <typename T> inline void polar(complex<T>* x, int size)
 {
   for (int i = 0; i < size; i++)
   {
-  x[i] = static_cast<complex<T>>(polar(1.0, real(x[i])));
+    x[i] = static_cast<complex<T>>(polar(1.0, real(x[i])));
+  }
+}
+
+// Take a real phase vector, turn it into complex phases.
+template <typename T> inline void polar_vector(T* phase, complex<T>* u1, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    u1[i] = polar(1.0, phase[i]);
   }
 }
 
@@ -121,16 +156,38 @@ template <typename T> inline void arg_vector(complex<T>* x, int size)
 {
   for (int i = 0; i < size; i++)
   {
-  x[i] = static_cast<complex<T>>(arg(x[i]));
+    x[i] = static_cast<complex<T>>(arg(x[i]));
+  }
+}
+
+// Take a complex value, save as the real phase.
+template <typename T> inline void arg_vector(complex<T>* u1, T* phase, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    phase[i] = arg(u1[i]);
   }
 }
 
 // Copy v2 into v1.
-template<typename T> inline void copy_vector(T* v1, T* v2, int size)
+template<typename T, typename U = T> inline void copy_vector(T* v1, T* v2, int size)
 {
   for (int i = 0; i < size; i++)
   {
     v1[i] = v2[i];
+  }
+}
+
+// Special strided copy, follows blas conventions.
+template<typename T, typename U = T> inline void copy_vector_blas(T* v1, T* v2, int xstep, int size)
+{
+  if (xstep == 1) { copy_vector(v1, v2, size); return; }
+
+  int ix = 0;
+  for (int i = 0; i < size; i++)
+  {
+    v1[ix] = v2[ix];
+    ix += xstep;
   }
 }
 
