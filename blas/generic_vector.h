@@ -133,6 +133,37 @@ template <typename T> inline void random_uniform(complex<T>* x, int size, std::m
   }
 }
 
+// random z2 vector
+template <typename T> inline void random_z2(T* x, int size, std::mt19937 &generator)
+{
+  std::uniform_int_distribution<> dist(0, 1);
+  for (int i = 0; i < size; i++)
+  {
+    x[i] = static_cast<T>(2*dist(generator)-1);
+  }
+}
+
+// random z2 vector
+template <typename T> inline void random_z2(complex<T>* x, int size, std::mt19937 &generator)
+{
+  std::uniform_int_distribution<> dist(0, 1);
+  for (int i = 0; i < size; i++)
+  {
+    x[i] = std::complex<T>(static_cast<T>(2*dist(generator)-1), 0.0);
+  }
+}
+
+// random z4 vector
+template <typename T> inline void random_z4(complex<T>* x, int size, std::mt19937 &generator)
+{
+  std::uniform_int_distribution<> dist(0, 1);
+  for (int i = 0; i < size; i++)
+  {
+    x[i] = std::complex<T>(static_cast<T>(2*dist(generator)-1), static_cast<T>(2*dist(generator)-1));
+  }
+}
+
+
 // vectorized polar. applies x = polar(1.0, real(x));. Ignores imag(x).
 template <typename T> inline void polar(complex<T>* x, int size)
 {
