@@ -27,7 +27,46 @@ template<typename T> inline void cMATxpy_local(T* mat, T* x, T* y, int nrow, int
   }
 }
 
+// Perform a local square transpose.
+template<typename T> inline void cMATtranspose_square_local(T* mat, int ndim)
+{
+  for (int i = 0; i < ndim; i++)
+    for (int j = i+1; j < ndim; j++)
+      std::swap(mat[i*ndim+j], mat[j*ndim+i]);
+}
 
+// Perform a copy and transpose.
+template<typename T> inline void cMATcopy_transpose_square_local(T* mat, T* mat_dest, int ndim)
+{
+  for (int i = 0; i < ndim; i++)
+    for (int j = 0; j < ndim; j++)
+      mat_dest[i*ndim+j] = mat[j*ndim+i];
+}
+
+// Perform a local hermitian transpose.
+template<typename T> inline void cMATconjtrans_square_local(complex<T>* mat, int ndim)
+{
+  complex<T> tmp; 
+  for (int i = 0; i < ndim; i++)
+  {
+    tmp = mat[i*ndim+i];
+    mat[i*ndim+i] = std::conj(tmp);
+    for (int j = i+1; j < ndim; j++)
+    {
+      tmp = std::conj(mat[i*ndim+j]);
+      mat[i*ndim+j] = std::conj(mat[j*ndim+i]);
+      mat[j*ndim+i] = tmp;
+    }
+  }
+}
+
+// Perform a copy and hermitian conjugate
+template<typename T> inline void cMATcopy_conjtrans_square_local(T* mat, T* mat_dest, int ndim)
+{
+  for (int i = 0; i < ndim; i++)
+    for (int j = 0; j < ndim; j++)
+      mat_dest[i*ndim+j] = std::conj(mat[j*ndim+i]);
+}
 
 
 

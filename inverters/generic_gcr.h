@@ -207,7 +207,6 @@ inversion_info minv_vector_gcr(complex<double>  *phi, complex<double>  *phi0, in
 
   // Allocate memory.
   x = allocate_vector<complex<double>>(size);
-  x = allocate_vector<complex<double>>(size);
   r = allocate_vector<complex<double>>(size);
   Ar = allocate_vector<complex<double>>(size);
   p = allocate_vector<complex<double>>(size);

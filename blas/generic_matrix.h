@@ -26,5 +26,46 @@ template<typename T> inline void cMATxpy(T* mat, T* x, T* y, int nelem, int nrow
   }
 }
 
+// Transpose the global mat.
+template<typename T> inline void cMATtranspose_square(T* mat, int nelem, int ndim)
+{
+  int mat_vol = ndim*ndim;
+  for (int i = 0; i < nelem; i++)
+  {
+    cMATtranspose_square_local(mat+i*mat_vol, ndim);
+  }
+}
+
+// Copy + Transpose the global mat.
+template<typename T> inline void cMATcopy_transpose_square(T* mat, T* mat_dest, int nelem, int ndim)
+{
+  int mat_vol = ndim*ndim;
+  for (int i = 0; i < nelem; i++)
+  {
+    cMATcopy_transpose_square_local(mat+i*mat_vol, mat_dest+i*mat_vol, ndim);
+  }
+}
+
+// Conjugate transpose the global mat.
+template<typename T> inline void cMATconjtrans_square(complex<T>* mat, int nelem, int ndim)
+{
+  int mat_vol = ndim*ndim;
+  for (int i = 0; i < nelem; i++)
+  {
+    cMATconjtrans_square_local(mat+i*mat_vol, ndim);
+  }
+}
+
+// Conjugate transpose the global mat.
+template<typename T> inline void cMATcopy_conjtrans_square(complex<T>* mat, complex<T>* mat_dest, int nelem, int ndim)
+{
+  int mat_vol = ndim*ndim;
+  for (int i = 0; i < nelem; i++)
+  {
+    cMATcopy_conjtrans_square_local(mat+i*mat_vol, mat_dest+i*mat_vol, ndim);
+  }
+}
+
+
 #endif // QLINALG_MATRIX
 
