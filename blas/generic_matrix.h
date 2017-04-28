@@ -78,7 +78,7 @@ template<typename T> inline void cMATxtMATyMATz_square(T* xmat, T* ymat, T* zmat
   const int mat_vol = ndim*ndim;
   for (int i = 0; i < nelem; i++)
   {
-    cMATxtMATyMATz_square(xmat+i*mat_vol, ymat+i*mat_vol, zmat+i*mat_vol, ndim);
+    cMATxtMATyMATz_square_local(xmat+i*mat_vol, ymat+i*mat_vol, zmat+i*mat_vol, ndim);
   }
 }
 
