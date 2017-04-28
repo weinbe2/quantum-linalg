@@ -68,6 +68,29 @@ template<typename T> inline void cMATcopy_conjtrans_square_local(T* mat, T* mat_
       mat_dest[i*ndim+j] = std::conj(mat[j*ndim+i]);
 }
 
+// Do a local mat-mat operation in row-major.
+// Z = X*Y, square matrix. 
+template<typename T> inline void cMATxtMATyMATz_square_local(T* x, T* y, T* z, int ndim)
+{
+  // Use a kij loop order to maximize cache efficiency.
+  int i,j,k;
+  T r;
+
+  for (i = 0; i < ndim*ndim; i++)
+    z[i] = 0.0;
+
+  for (k = 0; k < ndim; k++)
+  {
+    for (i = 0; i < ndim; i++)
+    {
+      r = x[i*ndim+k];
+      for (j = 0; j < ndim; j++)
+      {
+        z[i*ndim+j] += r*y[k*ndim+j];
+      }
+    }
+  }
+}
 
 
 #endif // QLINALG_MATRIX_LOCAL

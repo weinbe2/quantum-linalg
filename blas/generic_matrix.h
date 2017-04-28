@@ -9,6 +9,11 @@ using std::polar;
 
 #include "generic_local_matrix.h"
 
+namespace ESW_QR
+{
+  #include "qr.h"
+}
+
 #ifndef QLINALG_MATRIX
 #define QLINALG_MATRIX
 
@@ -66,6 +71,39 @@ template<typename T> inline void cMATcopy_conjtrans_square(complex<T>* mat, comp
   }
 }
 
+// Do a mat-mat operation in row-major.
+// Z = X*Y, square matrix. 
+template<typename T> inline void cMATxtMATyMATz_square(T* xmat, T* ymat, T* zmat, int nelem, int ndim)
+{
+  const int mat_vol = ndim*ndim;
+  for (int i = 0; i < nelem; i++)
+  {
+    cMATxtMATyMATz_square(xmat+i*mat_vol, ymat+i*mat_vol, zmat+i*mat_vol, ndim);
+  }
+}
+
+// Perform a QR decomposition in row-major.
+// Complex only.
+// xmat -> qmat * rmat
+template<typename T> inline void cMATx_do_qr_square(complex<T>* xmat, complex<T>* qmat, complex<T>* rmat, int nelem, int ndim)
+{
+  const int mat_vol = ndim*ndim;
+  for (int i = 0; i < nelem; i++)
+  {
+    ESW_QR::qr_decomposition(qmat+i*mat_vol, rmat+i*mat_vol, xmat+i*mat_vol, ndim);
+  }
+}
+
+// Form the inverse of a matrix from a QR decomposition.
+// Complex only.
+template<typename T> inline void cMATqr_do_xinv_square(complex<T>* qmat, complex<T>* rmat, complex<T>* xinvmat, int nelem, int ndim)
+{
+  const int mat_vol = ndim*ndim;
+  for (int i = 0; i < nelem; i++)
+  {
+    ESW_QR::matrix_invert_qr(xinvmat+i*mat_vol, qmat+i*mat_vol, rmat+i*mat_vol, ndim);
+  }
+}
 
 #endif // QLINALG_MATRIX
 
