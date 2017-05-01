@@ -40,10 +40,14 @@ int main(int argc, char** argv)
 
   // Identity as appropriate.
   zero_vector(Eye, num_matrix*n_dim*n_dim);
-  for (int i = 0; i < n_dim; i++)
+  complex<double> identity_pattern[n_dim*n_dim];
+  for (int i = 0; i < n_dim*n_dim; i++)
   {
-    constant_vector_blas(Eye+i*(n_dim+1), n_dim*n_dim, 1.0, num_matrix);
+    identity_pattern[i] = 0.0;
+    if (i % (n_dim+1) == 0)
+      identity_pattern[i] = 1.0;
   }
+  capx_pattern(identity_pattern, n_dim*n_dim, Eye, num_matrix);
 
   // Test a batch QR decomposition.
   cMATx_do_qr_square(A, Q, R, num_matrix, n_dim);

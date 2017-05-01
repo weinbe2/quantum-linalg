@@ -62,11 +62,14 @@ void qr_decomposition(std::complex<double>* Q, std::complex<double>* R, std::com
 
     norm_accumulate += (-norm_scale*norm_scale + std::real(std::conj(v[j])*v[j]));
 
-    // if the norm is 0, we're dead, so we assume it's non-zero.
-    double sqrt_2_inv_norm = sqrt(2.0/norm_accumulate);
-    for (int i = j; i < N_dim; i++)
+    // Safety if norm is zero.
+    if (norm_accumulate > 0.0)
     {
-      v[i] *= sqrt_2_inv_norm;
+      double sqrt_2_inv_norm = sqrt(2.0/norm_accumulate);
+      for (int i = j; i < N_dim; i++)
+      {
+        v[i] *= sqrt_2_inv_norm;
+      }
     }
     // Good, we've got the Householder vector.
 

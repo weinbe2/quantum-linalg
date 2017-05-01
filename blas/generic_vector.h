@@ -222,6 +222,44 @@ template<typename T, typename U = T> inline void copy_vector_blas(T* v1, T* v2, 
   }
 }
 
+// Add a constant to all components, y += a
+template<typename T, typename U = T> inline void capx(U a, T* x, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    x[i] += a;
+  }
+}
+
+// Strided capx, y += a, where 'y' hops are specified.
+template<typename T, typename U = T> inline void capx(U a, T* x, int xstep, int size)
+{
+  if (xstep == 1) { capx(a, x, size); return; }
+
+  int ix = 0;
+  for (int i = 0; i < size; i++)
+  {
+    x[ix] += a;
+    ix += xstep;
+  }
+}
+
+// Patterned capx, y += a, where a is a pattern which gets repeated.
+template<typename T, typename U = T> inline void capx_pattern(U* a, int asize, T* x, int size)
+{
+  if (asize == 1) { capx(a[0], x, size); return; }
+
+  int ix = 0;
+  for (int i = 0; i < size; i++)
+  {
+    for (int ia = 0; ia < asize; ia++)
+    {
+      x[ix+ia] += a[ia];
+    }
+    ix += asize;
+  }
+}
+
 // Rescale cax, x *= a
 template<typename T, typename U = T> inline void cax(U a, T* x, int size)
 {
