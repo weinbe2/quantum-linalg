@@ -14,6 +14,12 @@
 
 using std::complex;
 
+#ifndef QLINALG_FCN_POINTER
+#define QLINALG_FCN_POINTER
+typedef void (*matrix_op_real)(double*,double*,void*);
+typedef void (*matrix_op_cplx)(complex<double>*,complex<double>*,void*);
+#endif
+
 #include "inverter_struct.h"
 #include "../verbosity/verbosity.h"
 

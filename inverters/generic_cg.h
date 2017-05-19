@@ -3,6 +3,8 @@
 // Solves lhs = A^(-1) rhs with CG.
 // Assumes the matrix is Hermitian (symmetric) positive definite.
 
+
+
 #ifndef QLINALG_INVERTER_CG
 #define QLINALG_INVERTER_CG
 
@@ -12,6 +14,13 @@
 
 using std::complex;
 using std::stringstream;
+
+
+#ifndef QLINALG_FCN_POINTER
+#define QLINALG_FCN_POINTER
+typedef void (*matrix_op_real)(double*,double*,void*);
+typedef void (*matrix_op_cplx)(complex<double>*,complex<double>*,void*);
+#endif
 
 #include "inverter_struct.h"
 #include "../verbosity/verbosity.h"

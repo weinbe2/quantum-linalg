@@ -193,7 +193,8 @@ public:
   arpack_dcn(int n, int maxitr, double tol, void (*matrix_vector)(complex<double>*,complex<double>*,void*), void* extra_info, int nev, int ncv)
    : n(n), max_nev(nev), max_ncv(ncv), ldv(n),
      v(0), d(0), workl(0), workd(0), resid(0), workev(0),
-     rwork(0), rd(0), select(0), is_allocated(false), entire_spectrum(false), 
+     rwork(0), rd(0), select(0), ierr(0),
+     is_allocated(false), entire_spectrum(false), 
      maxitr(maxitr), tol(tol), ev(0), cv(0), 
      matrix_vector(matrix_vector), extra_info(extra_info)
   {
@@ -387,12 +388,6 @@ private:
     info_solve.ops_count = iparam[8];
     info_solve.n_conv = iparam[4];
     info_solve.success = true;
-
-    if (ierr != 0)
-    {
-      // There was an error.
-      return false;
-    }
 
     ev = in_ev;
     cv = in_cv;
@@ -782,7 +777,7 @@ private:
       return false;
 
     // Grab the relevant parts of the spectrum so they're pre-sorted.
-    arpack_spectrum_piece first_part, second_part;
+    arpack_spectrum_piece first_part = ARPACK_SMALLEST_MAGNITUDE, second_part = ARPACK_LARGEST_MAGNITUDE;
 
     switch (spectrum_sort)
     {
