@@ -88,7 +88,7 @@ template<typename T> inline void gaussian(T* x, int size, std::mt19937 &generato
   std::normal_distribution<> dist(0.0, deviation);
   for (int i = 0; i < size; i++)
   {
-    x[i] = real(mean) + static_cast<T>(dist(generator));
+    x[i] = mean + static_cast<T>(dist(generator));
   }
 }
 
