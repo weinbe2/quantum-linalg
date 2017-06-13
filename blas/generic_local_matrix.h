@@ -27,6 +27,19 @@ template<typename T> inline void cMATxpy_local(T* mat, T* x, T* y, int nrow, int
   }
 }
 
+// y = A*x, A matrix. y is length nrow, x is length ncol.
+template<typename T> inline void cMATxy_local(T* mat, T* x, T* y, int nrow, int ncol)
+{
+  for (int i = 0; i < nrow; i++)
+  {
+    T tmp = static_cast<T>(0.0);
+    for (int j = 0; j < ncol; j++)
+      tmp += mat[i*ncol+j]*x[j];
+    y[i] = tmp;
+  }
+}
+
+
 // Perform a local square transpose.
 template<typename T> inline void cMATtranspose_square_local(T* mat, int ndim)
 {
