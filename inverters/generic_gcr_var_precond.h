@@ -207,9 +207,7 @@ inversion_info minv_vector_gcr_var_precond_restart(double  *phi, double  *phi0, 
   while (iter < max_iter && invif.success == false && sqrt(invif.resSq)/bsqrt > res);
   
   invif.iter = iter; invif.ops_count = ops_count; 
-  
-  print_verbosity_summary(verb, ss.str(), invif.success, iter, invif.ops_count, sqrt(invif.resSq)/bsqrt);
-  
+
   invif.name = ss.str();
   // invif.resSq is good.
   if (sqrt(invif.resSq)/bsqrt > res)
@@ -220,6 +218,8 @@ inversion_info minv_vector_gcr_var_precond_restart(double  *phi, double  *phi0, 
   {
     invif.success = true;
   }
+  
+  print_verbosity_summary(verb, ss.str(), invif.success, iter, invif.ops_count, sqrt(invif.resSq)/bsqrt);
   
   return invif;
 }
@@ -387,9 +387,7 @@ inversion_info minv_vector_gcr_var_precond_restart(complex<double>  *phi, comple
     print_verbosity_restart(verb, ss.str(), iter, ops_count, sqrt(invif.resSq)/bsqrt);
   }
   while (iter < max_iter && invif.success == false && sqrt(invif.resSq)/bsqrt > res);
-  
-  print_verbosity_summary(verb, ss.str(), invif.success, iter, invif.ops_count, sqrt(invif.resSq)/bsqrt);
-  
+
   invif.iter = iter;
   invif.ops_count = ops_count; 
   
@@ -403,6 +401,8 @@ inversion_info minv_vector_gcr_var_precond_restart(complex<double>  *phi, comple
   {
     invif.success = true;
   }
+  
+  print_verbosity_summary(verb, ss.str(), invif.success, iter, invif.ops_count, sqrt(invif.resSq)/bsqrt);
   
   return invif;
 }
