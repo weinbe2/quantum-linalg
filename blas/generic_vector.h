@@ -269,6 +269,20 @@ template<typename T, typename U = T> inline void cax(U a, T* x, int size)
   }
 }
 
+// Implemented strided cax, x *= a, where the 'x' hops are specified.
+// Matches blas specification conventions.
+template<typename T, typename U = T> inline void cax_blas(U a, T* x, int xstep, int size)
+{
+  if (xstep == 1) { cax(a, x, size); return; }
+
+  int ix = 0;
+  for (int i = 0; i < size; i++)
+  {
+    x[ix] *= a;
+    ix += xstep;
+  }
+}
+
 // Implement caxy, y = a*x
 template<typename T, typename U = T> inline void caxy(U a, T* x, T* y, int size)
 {

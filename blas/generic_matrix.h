@@ -31,6 +31,15 @@ template<typename T> inline void cMATxpy(T* mat, T* x, T* y, int nelem, int nrow
   }
 }
 
+template<typename T> inline void cMATxy(T* mat, T* x, T* y, int nelem, int nrow, int ncol)
+{
+  int mat_vol = nrow*ncol;
+  for (int i = 0; i < nelem; i++)
+  {
+    cMATxy_local(mat+i*mat_vol, x+i*ncol, y+i*nrow, nrow, ncol);
+  }
+}
+
 // Transpose the global mat.
 template<typename T> inline void cMATtranspose_square(T* mat, int nelem, int ndim)
 {
