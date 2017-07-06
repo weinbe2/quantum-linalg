@@ -12,11 +12,12 @@ using std::complex;
 #define PI 3.14159265358979323846
 #endif
 
+#ifdef QLINALG_TEMPLATING
 // Do a local mat-vec operation in row-major.
 // I should just pull in Eigen for this,
 // but why overcomplicate things for now.
 // y += A*x, A matrix. y is length nrow, x is length ncol.
-template<typename T> inline void cMATxpy_local(T* mat, T* x, T* y, int nrow, int ncol)
+template<int nrow, int ncol, typename T> inline void cMATxpy_local(T* mat, T* x, T* y)
 {
   for (int i = 0; i < nrow; i++)
   {
@@ -28,7 +29,7 @@ template<typename T> inline void cMATxpy_local(T* mat, T* x, T* y, int nrow, int
 }
 
 // y = A*x, A matrix. y is length nrow, x is length ncol.
-template<typename T> inline void cMATxy_local(T* mat, T* x, T* y, int nrow, int ncol)
+template<int nrow, int ncol, typename T> inline void cMATxy_local(T* mat, T* x, T* y)
 {
   for (int i = 0; i < nrow; i++)
   {
@@ -39,6 +40,33 @@ template<typename T> inline void cMATxy_local(T* mat, T* x, T* y, int nrow, int 
   }
 }
 
+#endif
+// Do a local mat-vec operation in row-major.
+// I should just pull in Eigen for this,
+// but why overcomplicate things for now.
+// y += A*x, A matrix. y is length nrow, x is length ncol.
+template<typename T> inline void cMATxpy_local(T* mat, T* x, T* y, const int nrow, const int ncol)
+{
+  for (int i = 0; i < nrow; i++)
+  {
+    T tmp = static_cast<T>(0.0);
+    for (int j = 0; j < ncol; j++)
+      tmp += mat[i*ncol+j]*x[j];
+    y[i] += tmp;
+  }
+}
+
+// y = A*x, A matrix. y is length nrow, x is length ncol.
+template<typename T> inline void cMATxy_local(T* mat, T* x, T* y, const int nrow, const int ncol)
+{
+  for (int i = 0; i < nrow; i++)
+  {
+    T tmp = static_cast<T>(0.0);
+    for (int j = 0; j < ncol; j++)
+      tmp += mat[i*ncol+j]*x[j];
+    y[i] = tmp;
+  }
+}
 
 // Perform a local square transpose.
 template<typename T> inline void cMATtranspose_square_local(T* mat, int ndim)

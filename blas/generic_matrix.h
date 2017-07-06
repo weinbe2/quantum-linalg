@@ -21,24 +21,181 @@ namespace ESW_QR
 #define PI 3.14159265358979323846
 #endif
 
+#ifdef QLINALG_TEMPLATING
+
 // Apply the global mat-vec operation in row-major.
-template<typename T> inline void cMATxpy(T* mat, T* x, T* y, int nelem, int nrow, int ncol)
+template<typename T> inline void cMATxpy(T* mat, T* x, T* y, const int nelem, const int nrow, const int ncol)
 {
-  int mat_vol = nrow*ncol;
+  const int mat_vol = nrow*ncol;
+  if (nrow == 1 && ncol == 1)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxpy_local<1,1>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else if (nrow == 2 && ncol == 2)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxpy_local<2,2>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else if (nrow == 4 && ncol == 4)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxpy_local<4,4>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else if (nrow == 8 && ncol == 8)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxpy_local<8,8>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else if (nrow == 12 && ncol == 12)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxpy_local<12,12>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else if (nrow == 16 && ncol == 16)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxpy_local<16,16>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else if (nrow == 20 && ncol == 20)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxpy_local<20,20>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else if (nrow == 24 && ncol == 24)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxpy_local<24,24>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else if (nrow == 32 && ncol == 32)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxpy_local<32,32>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxpy_local(mat+i*mat_vol, x+i*ncol, y+i*nrow, nrow, ncol);
+    }
+  }
+}
+
+template<typename T> inline void cMATxy(T* mat, T* x, T* y, const int nelem, const int nrow, const int ncol)
+{
+  const int mat_vol = nrow*ncol;
+  if (nrow == 1 && ncol == 1)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxy_local<1,1>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else if (nrow == 2 && ncol == 2)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxy_local<2,2>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else if (nrow == 4 && ncol == 4)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxy_local<4,4>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else if (nrow == 8 && ncol == 8)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxy_local<8,8>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else if (nrow == 12 && ncol == 12)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxy_local<12,12>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else if (nrow == 16 && ncol == 16)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxy_local<16,16>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else if (nrow == 20 && ncol == 20)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxy_local<20,20>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else if (nrow == 24 && ncol == 24)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxy_local<24,24>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else if (nrow == 32 && ncol == 32)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxy_local<32,32>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxy_local(mat+i*mat_vol, x+i*ncol, y+i*nrow, nrow, ncol);
+    }
+  }
+}
+
+#else
+
+// Apply the global mat-vec operation in row-major.
+template<typename T> inline void cMATxpy(T* mat, T* x, T* y, const int nelem, const int nrow, const int ncol)
+{
+  const int mat_vol = nrow*ncol;
   for (int i = 0; i < nelem; i++)
   {
     cMATxpy_local(mat+i*mat_vol, x+i*ncol, y+i*nrow, nrow, ncol);
   }
 }
 
-template<typename T> inline void cMATxy(T* mat, T* x, T* y, int nelem, int nrow, int ncol)
+template<typename T> inline void cMATxy(T* mat, T* x, T* y, const int nelem, const int nrow, const int ncol)
 {
-  int mat_vol = nrow*ncol;
+  const int mat_vol = nrow*ncol;
   for (int i = 0; i < nelem; i++)
   {
     cMATxy_local(mat+i*mat_vol, x+i*ncol, y+i*nrow, nrow, ncol);
   }
 }
+
+#endif
 
 // Transpose the global mat.
 template<typename T> inline void cMATtranspose_square(T* mat, int nelem, int ndim)
