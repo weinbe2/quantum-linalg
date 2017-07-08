@@ -184,7 +184,15 @@ inversion_info minv_vector_cg(complex<double>  *phi, complex<double>  *phi0, int
   int k;
   // Initialize vectors.
   complex<double> *r, *p, *Ap;
-  double alpha, beta;
+#ifdef POLAK_REBIERE
+  complex<double> *rold; // For Polak–Ribière
+#endif
+  double alpha; 
+#ifdef POLAK_REBIERE
+  complex<double> beta_polak;
+#else
+  double beta;
+#endif
   complex<double> denom;
   double rsq, rsqNew, bsqrt, truersq;
   inversion_info invif;
@@ -193,6 +201,9 @@ inversion_info minv_vector_cg(complex<double>  *phi, complex<double>  *phi0, int
   r = allocate_vector<complex<double>>(size);
   p = allocate_vector<complex<double>>(size);
   Ap = allocate_vector<complex<double>>(size);
+#ifdef POLAK_REBIERE
+  rold = allocate_vector<complex<double>>(size);
+#endif
 
   // Initialize values.
   rsq = 0.0; rsqNew = 0.0; bsqrt = 0.0; truersq = 0.0; k=0;
@@ -227,6 +238,9 @@ inversion_info minv_vector_cg(complex<double>  *phi, complex<double>  *phi0, int
     // phi += alpha*p
     caxpy(alpha, p, phi, size);
     
+#ifdef POLAK_REBIERE
+    copy_vector(rold, r, size);
+#endif
     // r -= alpha*Ap
     caxpy(-alpha, Ap, r, size);
     
@@ -241,11 +255,19 @@ inversion_info minv_vector_cg(complex<double>  *phi, complex<double>  *phi0, int
     }
   
     // Update vec using new residual
+#ifndef POLAK_REBIERE
     beta = rsqNew / rsq;
+#else
+    beta_polak = (std::complex<double>(rsqNew, 0.0) - dot(r, rold, size))/ rsq;
+#endif
     rsq = rsqNew; 
     
     // p = r + beta*p
+#ifndef POLAK_REBIERE
     cxpay(r, beta, p, size);
+#else
+    cxpay(r, beta_polak, p, size);
+#endif
     
     // Compute the new Ap.
     (*matrix_vector)(Ap, p, extra_info); invif.ops_count++;
@@ -268,6 +290,9 @@ inversion_info minv_vector_cg(complex<double>  *phi, complex<double>  *phi0, int
   deallocate_vector(&r);
   deallocate_vector(&p);
   deallocate_vector(&Ap);
+#ifdef POLAK_REBIERE
+  deallocate_vector(&rold);
+#endif
 
   
   print_verbosity_summary(verb, "CG", invif.success, k, invif.ops_count, sqrt(truersq)/bsqrt);
