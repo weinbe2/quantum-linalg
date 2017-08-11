@@ -14,7 +14,7 @@ TARGET = biorthogonalize
 
 CCX = g++
 #CXXFLAGS =   -std=c99 -g -O2  
-CXXFLAGS = -O2 -g -Wall -std=c++11
+CXXFLAGS = -O2 -g -Wall -std=c++11 -I../../
 
 
 #  = -DHAVE_CONFIG_H -I   -g -O2  -MT

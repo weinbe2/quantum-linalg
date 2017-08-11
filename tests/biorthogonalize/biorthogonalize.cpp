@@ -6,46 +6,7 @@
 
 using namespace std;
 
-
-// Random gaussian vector, random in real and imag.
-template <typename T> inline void gaussian(complex<T>* x, int size, std::mt19937 &generator, T deviation = 1.0, complex<T> mean = 0.0)
-{
-  // Generate a normal distribution.
-  std::normal_distribution<> dist(0.0, deviation);
-  for (int i = 0; i < size; i++)
-  {
-    x[i] = std::complex<T>(real(mean) + static_cast<T>(dist(generator)), imag(mean) + static_cast<T>(dist(generator)));
-  }
-}
-
-// computes conj(v1) dot v2.
-template <typename T> inline complex<T> dot(complex<T>* v1, complex<T>* v2, int size)
-{
-  complex<T> res = static_cast<T>(0.0);
-  for (int i = 0; i < size; i++)
-  {
-  res = res + conj(v1[i])*v2[i];
-  }
-  return res;
-}
-
-// Rescale cax, x *= a
-template<typename T, typename U = T> inline void cax(U a, T* x, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    x[i] *= a;
-  }
-}
-
-// Implement caxpy, y += a*x
-template<typename T, typename U = T> inline void caxpy(U a, T* x, T* y, int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    y[i] += a*x[i];
-  }
-}
+#include "blas/generic_vector.h"
 
 int main(int argc, char** argv)
 {
@@ -66,8 +27,8 @@ int main(int argc, char** argv)
   vector<complex<double>*> right_vecs(n_ortho);
   for (i = 0; i < n_ortho; i++)
   {
-    left_vecs[i] = new complex<double>[length];
-    right_vecs[i] = new complex<double>[length];
+    left_vecs[i] = allocate_vector<complex<double>>(length);
+    right_vecs[i] = allocate_vector<complex<double>>(length);
 
     gaussian(left_vecs[i], length, generator);
     gaussian(right_vecs[i], length, generator);
@@ -90,9 +51,9 @@ int main(int argc, char** argv)
     for (j = 0; j < i; j++)
     {
       // divisor would be one if we normalize.
-      complex<double> alpha = dot(left_vecs[i], right_vecs[j], length)/dot(left_vecs[j], right_vecs[j], length);
+      complex<double> alpha = dot(left_vecs[i], right_vecs[j], length);//dot(left_vecs[j], right_vecs[j], length);
       caxpy(-conj(alpha), left_vecs[j], left_vecs[i], length);
-      complex<double> beta = dot(left_vecs[j], right_vecs[i], length)/dot(left_vecs[j], right_vecs[j], length);
+      complex<double> beta = dot(left_vecs[j], right_vecs[i], length);//dot(left_vecs[j], right_vecs[j], length);
       caxpy(-beta, right_vecs[j], right_vecs[i], length);
     }
 
@@ -116,8 +77,8 @@ int main(int argc, char** argv)
 
   for (i = 0; i < n_ortho; i++)
   {
-    delete[] left_vecs[i];
-    delete[] right_vecs[i];
+    deallocate_vector(&left_vecs[i]);
+    deallocate_vector(&right_vecs[i]);
   }
 
   return 0;
