@@ -154,3 +154,13 @@ void matrix_invert_qr(std::complex<double>* Ainv, std::complex<double>* Q, std::
     }
   }
 }
+
+std::complex<double> matrix_det_qr(std::complex<double>* Q, std::complex<double>* R, int N_dim)
+{
+  std::complex<double> det = 1.0;
+  int i;
+  for (i = 0; i < N_dim; i++)
+    det *= R[i*(N_dim+1)];
+
+  return det;
+}

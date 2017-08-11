@@ -271,5 +271,17 @@ template<typename T> inline void cMATqr_do_xinv_square(complex<T>* qmat, complex
   }
 }
 
+// Compute the determinant from a QR decomposition.
+// Complex only.
+// Complex only.
+template<typename T> inline void cMATqr_do_det_square(complex<T>* qmat, complex<T>* rmat, complex<T>* det, int nelem, int ndim)
+{
+  const int mat_vol = ndim*ndim;
+  for (int i = 0; i < nelem; i++)
+  {
+    det[i] = ESW_QR::matrix_det_qr(qmat+i*mat_vol, rmat+i*mat_vol, ndim);
+  }
+}
+
 #endif // QLINALG_MATRIX
 

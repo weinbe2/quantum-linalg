@@ -283,6 +283,22 @@ template<typename T, typename U = T> inline void cax_blas(U a, T* x, int xstep, 
   }
 }
 
+// Patterned cax, x *= a, where a is a pattern which gets repeated.
+template<typename T, typename U = T> inline void cax_pattern(U* a, int asize, T* x, int size)
+{
+  if (asize == 1) { cax(a[0], x, size); return; }
+
+  int ix = 0;
+  for (int i = 0; i < size; i++)
+  {
+    for (int ia = 0; ia < asize; ia++)
+    {
+      x[ix+ia] *= a[ia];
+    }
+    ix += asize;
+  }
+}
+
 // Implement caxy, y = a*x
 template<typename T, typename U = T> inline void caxy(U a, T* x, T* y, int size)
 {
@@ -304,6 +320,39 @@ template<typename T, typename U = T> inline void caxy_blas(U a, T* x, int xstep,
     y[iy] = a*x[ix];
     ix += xstep;
     iy += ystep;
+  }
+}
+
+// Patterned cax, y = a*x, where a is a pattern which gets repeated.
+template<typename T, typename U = T> inline void caxy_pattern(U* a, int asize, T* x, T* y, int size)
+{
+  if (asize == 1) { caxy(a[0], x, y, size); return; }
+
+  int ix = 0;
+  for (int i = 0; i < size; i++)
+  {
+    for (int ia = 0; ia < asize; ia++)
+    {
+      y[ix+ia] = a[ia] * x[ix+ia];
+    }
+    ix += asize;
+  }
+}
+
+// Patterned and shuffled caxy, y = a*x, where a is a pattern which gets repeated.
+// Permutes y[shuffle[i]] = a[i]*x[i]
+template<typename T, typename U = T> inline void caxy_shuffle_pattern(U* a, int* shuffle, int asize, T* x, T* y, int size)
+{
+  if (asize == 1) { caxy(a[0], x, y, size); return; }
+
+  int ix = 0;
+  for (int i = 0; i < size; i++)
+  {
+    for (int ia = 0; ia < asize; ia++)
+    {
+      y[ix+shuffle[ia]] = a[ia] * x[ix+ia];
+    }
+    ix += asize;
   }
 }
 
