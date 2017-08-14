@@ -182,6 +182,15 @@ template <typename T> inline void polar_vector(T* phase, complex<T>* u1, int siz
   }
 }
 
+// vectorized abs.
+template<typename T> inline void abs_vector(complex<T>*x, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    x[i] = static_cast<complex<T>>(abs(x[i]));
+  }
+}
+
 // vectorized arg.
 template <typename T> inline void arg_vector(complex<T>* x, int size)
 {

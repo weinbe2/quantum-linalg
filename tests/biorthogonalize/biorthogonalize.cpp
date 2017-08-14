@@ -51,8 +51,8 @@ int main(int argc, char** argv)
     for (j = 0; j < i; j++)
     {
       // divisor would be one if we normalize.
-      complex<double> alpha = dot(left_vecs[i], right_vecs[j], length);//dot(left_vecs[j], right_vecs[j], length);
-      caxpy(-conj(alpha), left_vecs[j], left_vecs[i], length);
+      complex<double> alpha = dot(right_vecs[i], left_vecs[j], length);//dot(left_vecs[j], right_vecs[j], length);
+      caxpy(-alpha, left_vecs[j], left_vecs[i], length);
       complex<double> beta = dot(left_vecs[j], right_vecs[i], length);//dot(left_vecs[j], right_vecs[j], length);
       caxpy(-beta, right_vecs[j], right_vecs[i], length);
     }
