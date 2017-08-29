@@ -31,14 +31,14 @@ void test_orthogonalize(const int n_ortho, const int length)
   {
     for (j = 0; j < n_ortho; j++)
     {
-      std::cout << dot(vecs[j], vecs[i], length) << " ";
+      std::cout << dot(vecs[i], vecs[j], length) << " ";
     }
     std::cout << "\n";
   }
   std::cout << "\n";
 
   // Okay, now ortho.
-  std::cout << "Sigma -> M = Sigma^\\dager Sigma\n\n";
+  std::cout << "Sigma -> M = Sigma^\\dagger Sigma\n\n";
   complex<double> Sigma[n_ortho][n_ortho];
   for (i = 0; i < n_ortho; i++)
   {
@@ -52,9 +52,9 @@ void test_orthogonalize(const int n_ortho, const int length)
     for (j = 0; j < i; j++)
     {
       // divisor would be one if we normalize.
-      complex<double> alpha = dot(vecs[i], vecs[j], length);
+      complex<double> alpha = dot(vecs[j], vecs[i], length);
       Sigma[j][i] = alpha;
-      caxpy(-conj(alpha), vecs[j], vecs[i], length);
+      caxpy(-alpha, vecs[j], vecs[i], length);
     }
 
     // We have a freedom on how to normalize since we need to take care of the 
@@ -204,7 +204,7 @@ void test_biorthogonalize(const int n_ortho, const int length)
 int main(int argc, char** argv)
 {
   // How many vectors are we bi-orthogonalizing?
-  const int n_ortho = 3;
+  const int n_ortho = 2;
 
   // What's the length of these vectors?
   const int length = 1024;

@@ -231,6 +231,21 @@ template<typename T, typename U = T> inline void copy_vector_blas(T* v1, T* v2, 
   }
 }
 
+// Special strided copy, follows blas conventions.
+template<typename T, typename U = T> inline void copy_vector_blas(T* v1, const int xstep, T* v2, const int ystep, const int size)
+{
+  if (xstep == 1 && ystep == 1) { copy_vector(v1, v2, size); return; }
+
+  int ix = 0;
+  int iy = 0;
+  for (int i = 0; i < size; i++)
+  {
+    v1[ix] = v2[iy];
+    ix += xstep;
+    iy += ystep;
+  }
+}
+
 // Add a constant to all components, y += a
 template<typename T, typename U = T> inline void capx(U a, T* x, int size)
 {
@@ -266,6 +281,15 @@ template<typename T, typename U = T> inline void capx_pattern(U* a, int asize, T
       x[ix+ia] += a[ia];
     }
     ix += asize;
+  }
+}
+
+// Invert each component of x.
+template<typename T> inline void cinvx(T* x, const int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    x[i] = 1.0/x[i];
   }
 }
 
