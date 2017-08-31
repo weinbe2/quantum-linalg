@@ -269,7 +269,7 @@ template<typename T, typename U = T> inline void capx(U a, T* x, int xstep, int 
 }
 
 // Patterned capx, y += a, where a is a pattern which gets repeated.
-template<typename T, typename U = T> inline void capx_pattern(U* a, int asize, T* x, int size)
+template<typename T, typename U = T> inline void capx_pattern(U* a, const int asize, T* x, const int size)
 {
   if (asize == 1) { capx(a[0], x, size); return; }
 
