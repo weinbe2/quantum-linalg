@@ -17,7 +17,7 @@ using std::complex;
 // I should just pull in Eigen for this,
 // but why overcomplicate things for now.
 // y += A*x, A matrix. y is length nrow, x is length ncol.
-template<int nrow, int ncol, typename T> inline void cMATxpy_local(T* mat, T* x, T* y)
+template<int nrow, int ncol, typename T> inline void cMATxpy_local(T* __restrict__ mat, T* __restrict__ x, T* __restrict__ y)
 {
   for (int i = 0; i < nrow; i++)
   {
@@ -29,7 +29,7 @@ template<int nrow, int ncol, typename T> inline void cMATxpy_local(T* mat, T* x,
 }
 
 // y = A*x, A matrix. y is length nrow, x is length ncol.
-template<int nrow, int ncol, typename T> inline void cMATxy_local(T* mat, T* x, T* y)
+template<int nrow, int ncol, typename T> inline void cMATxy_local(T* __restrict__ mat, T* __restrict__ x, T* __restrict__ y)
 {
   for (int i = 0; i < nrow; i++)
   {
@@ -45,7 +45,7 @@ template<int nrow, int ncol, typename T> inline void cMATxy_local(T* mat, T* x, 
 // I should just pull in Eigen for this,
 // but why overcomplicate things for now.
 // y += A*x, A matrix. y is length nrow, x is length ncol.
-template<typename T> inline void cMATxpy_local(T* mat, T* x, T* y, const int nrow, const int ncol)
+template<typename T> inline void cMATxpy_local(T* __restrict__ mat, T* __restrict__ x, T* __restrict__ y, const int nrow, const int ncol)
 {
   for (int i = 0; i < nrow; i++)
   {
@@ -57,7 +57,7 @@ template<typename T> inline void cMATxpy_local(T* mat, T* x, T* y, const int nro
 }
 
 // y = A*x, A matrix. y is length nrow, x is length ncol.
-template<typename T> inline void cMATxy_local(T* mat, T* x, T* y, const int nrow, const int ncol)
+template<typename T> inline void cMATxy_local(T* __restrict__ mat, T* __restrict__ x, T* __restrict__ y, const int nrow, const int ncol)
 {
   for (int i = 0; i < nrow; i++)
   {

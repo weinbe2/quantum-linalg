@@ -24,7 +24,7 @@ namespace ESW_QR
 #ifdef QLINALG_TEMPLATING
 
 // Apply the global mat-vec operation in row-major.
-template<typename T> inline void cMATxpy(T* mat, T* x, T* y, const int nelem, const int nrow, const int ncol)
+template<typename T> inline void cMATxpy(T* __restrict__ mat, T* __restrict__ x, T* __restrict__ y, const int nelem, const int nrow, const int ncol)
 {
   const int mat_vol = nrow*ncol;
   if (nrow == 1 && ncol == 1)
@@ -99,7 +99,7 @@ template<typename T> inline void cMATxpy(T* mat, T* x, T* y, const int nelem, co
   }
 }
 
-template<typename T> inline void cMATxy(T* mat, T* x, T* y, const int nelem, const int nrow, const int ncol)
+template<typename T> inline void cMATxy(T* __restrict__ mat, T* __restrict__ x, T* __restrict__ y, const int nelem, const int nrow, const int ncol)
 {
   const int mat_vol = nrow*ncol;
   if (nrow == 1 && ncol == 1)
@@ -177,7 +177,7 @@ template<typename T> inline void cMATxy(T* mat, T* x, T* y, const int nelem, con
 #else
 
 // Apply the global mat-vec operation in row-major.
-template<typename T> inline void cMATxpy(T* mat, T* x, T* y, const int nelem, const int nrow, const int ncol)
+template<typename T> inline void cMATxpy(T* __restrict__ mat, T* __restrict__ x, T* __restrict__ y, const int nelem, const int nrow, const int ncol)
 {
   const int mat_vol = nrow*ncol;
   for (int i = 0; i < nelem; i++)
@@ -186,7 +186,7 @@ template<typename T> inline void cMATxpy(T* mat, T* x, T* y, const int nelem, co
   }
 }
 
-template<typename T> inline void cMATxy(T* mat, T* x, T* y, const int nelem, const int nrow, const int ncol)
+template<typename T> inline void cMATxy(T* __restrict__ mat, T* __restrict__ x, T* __restrict__ y, const int nelem, const int nrow, const int ncol)
 {
   const int mat_vol = nrow*ncol;
   for (int i = 0; i < nelem; i++)
