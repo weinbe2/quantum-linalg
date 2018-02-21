@@ -55,6 +55,13 @@ template<typename T> inline void cMATxpy(T* __restrict__ mat, T* __restrict__ x,
       cMATxpy_local<8,8>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
     }
   }
+  else if (nrow == 10 && ncol == 10)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxpy_local<10,10>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
   else if (nrow == 12 && ncol == 12)
   {
     for (int i = 0; i < nelem; i++)
@@ -128,6 +135,13 @@ template<typename T> inline void cMATxy(T* __restrict__ mat, T* __restrict__ x, 
     for (int i = 0; i < nelem; i++)
     {
       cMATxy_local<8,8>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
+    }
+  }
+  else if (nrow == 10 && ncol == 10)
+  {
+    for (int i = 0; i < nelem; i++)
+    {
+      cMATxpy_local<10,10>(mat+i*mat_vol, x+i*ncol, y+i*nrow);
     }
   }
   else if (nrow == 12 && ncol == 12)
