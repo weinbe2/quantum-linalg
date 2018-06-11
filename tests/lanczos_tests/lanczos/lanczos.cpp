@@ -1,5 +1,7 @@
 // Copyright (c) 2017 Evan S Weinberg
-// Test code for a real operator.
+// Test code for a Hermitian
+// Lanczos without restarts, deflation, etc.
+// Based on arXiv:1512.08135.
 
 #include <iostream>
 #include <iomanip>
@@ -14,7 +16,13 @@
 
 #include "blas/generic_vector.h"
 
-#include "square_laplace.h"
+#include "../square_laplace.h"
+
+// Operator class
+#include "../operator.h"
+
+// Lanczos
+#include "../lanczos.h"
 
 using namespace std; 
 using namespace Eigen;
@@ -59,72 +67,43 @@ int main(int argc, char** argv)
 
   // Uncomment this to get the free field.
   //constant_vector(gauge_links, 1.0, 2*volume);
+  //std::cout << "Free case.\n\n";
 
-  std::cout << "Free case.\n\n";
+  std::cout << "Interacting case.\n\n";
 
-  // Based on arXiv:1512.08135
+
+  // Create an object. Wrap the square laplace function for convenience.
+  FunctionWrapper<complex<double>> lap_fcn(square_laplacian_gauged, &lapstr_gauged, volume);
 
   // m-step
   const int m = 20;
 
-  // Allocate m q's
-  complex<double>** Q = new complex<double>*[m];
+  // Create a Lanczos object.
+  SimpleComplexLanczos<double> lanczos(&lap_fcn, m, generator);
+
+  // Compute eigenvalues
+  lanczos.compute();
+
+  // Get Ritz values
+  double* ritzvalues = new double[m];
+  lanczos.ritzvalues(ritzvalues);
+
+  // Print the Ritz values
+  std::cout << "The Ritz values from a search space of size " << m << " are:\n";
   for (int i = 0; i < m; i++) {
-    Q[i] = allocate_vector<complex<double>>(volume);
-    zero_vector(Q[i], volume);
+    std::cout << ritzvalues[i] << "\n";
   }
 
-  // Allocate a temporary 'w' vector
-  complex<double>* w = allocate_vector<complex<double>>(volume);
-
-  // Prepare the tridiagonal matrix T_m
-  dMatrix Tm = dMatrix::Zero(m,m);
-
-  // Prepare a random unit vector for Q[0]!
-  gaussian(Q[0], volume, generator);
-  normalize(Q[0], volume);
-
-  // Let's goooo
+  complex<double>** ritzvectors = new complex<double>*[m];
   for (int i = 0; i < m; i++) {
-    zero_vector(w, volume);
-    square_laplacian_gauged(w, Q[i], &lapstr_gauged); // w = B q_i
-    if (i > 0) {
-      caxpy(-Tm(i-1,i), Q[i-1], w, volume); // w -= beta_i q_{i-1}
-    }
-
-    // Compute alpha_i
-    Tm(i,i) = re_dot(Q[i], w, volume);
-
-    // Break here if we're on the last step.
-    if (i == (m-1)) { break; }
-
-    // w -= alpha_i q_i
-    caxpy(-Tm(i,i), Q[i], w, volume);
-
-    // Reorthogonalize
-    for (int j = 0; j < i; j++) {
-      orthogonal(w, Q[j], volume);
-    }
-
-    // Compute beta_{i+1}
-    Tm(i+1,i) = Tm(i,i+1) = sqrt(norm2sq(w, volume));
-
-    // Check for breakdown
-    if (fabs(Tm(i,i+1)) < 1e-10) {
-      gaussian(Q[i+1], volume, generator);
-      normalize(Q[i+1], volume);
-    } else {
-      caxy(1.0/Tm(i+1,i), w, Q[i+1], volume);
-    }
+    ritzvectors[i] = allocate_vector<complex<double>>(volume);
   }
 
-  // Let's check the Ritz values!
-  SelfAdjointEigenSolver<dMatrix> eigsolve_Tm(m);
-  eigsolve_Tm.compute(Tm);
-  std::cout << "The Ritz values are:\n" << eigsolve_Tm.eigenvalues() << "\n";
+  // Get the Ritz vectors
+  lanczos.ritzvectors(ritzvectors);
 
-  // Let's get the eigenvalues of the full operator!
 
+  // Comparison: Let's get the eigenvalues of the full operator!
   // Allocate a sufficiently gigantic matrix.
   cMatrix mat_cplx = cMatrix::Zero(volume, volume);
 
@@ -140,7 +119,7 @@ int main(int argc, char** argv)
     // Where we put the result of the matrix element.
     complex<double>* mptr = &(mat_cplx(i*volume));
 
-    square_laplacian_gauged(mptr, rhs_cplx, &lapstr_gauged);
+    lap_fcn(mptr, rhs_cplx);
   }
 
   // Get the eigenvalues.
@@ -149,16 +128,38 @@ int main(int argc, char** argv)
 
   std::cout << "The eigenvalues are:\n" << eigsolve_cplx.eigenvalues() << "\n";
 
+  ////////////////////////////////
+  // COMPARE LOWEST EIGENVECTOR //
+  ////////////////////////////////
+
+  std::cout << "\n\nCompare results, smallest eigenvalue:\n\n";
+  std::cout << "Lanczos Exact Ratio\n";
+  for (int i = 0; i < volume; i++) {
+    std::cout << ritzvectors[0][i] << " " << eigsolve_cplx.eigenvectors()(i,0)
+              << " " << ritzvectors[0][i]/eigsolve_cplx.eigenvectors()(i,0) << "\n";
+  }
+
+  /////////////////////////////////
+  // COMPARE LARGEST EIGENVECTOR //
+  /////////////////////////////////
+
+  std::cout << "\n\nCompare results, largest eigenvalue:\n\n";
+  std::cout << "Lanczos Exact Ratio\n";
+  for (int i = 0; i < volume; i++) {
+    std::cout << ritzvectors[m-1][i] << " " << eigsolve_cplx.eigenvectors()(i,volume-1)
+              << " " << ritzvectors[m-1][i]/eigsolve_cplx.eigenvectors()(i,volume-1) << "\n";
+  }
+
   //////////////
   // CLEAN UP //
   //////////////
 
-  deallocate_vector(&w);
+  delete[] ritzvalues;
 
   for (int i = 0; i < m; i++) {
-    deallocate_vector(&Q[i]);
+    deallocate_vector(&ritzvectors[i]);
   }
-  delete[] Q;
+  delete[] ritzvectors;
 
   deallocate_vector(&rhs_cplx);
   deallocate_vector(&gauge_links);
