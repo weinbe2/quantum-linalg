@@ -1,7 +1,10 @@
 // Copyright (c) 2018 Evan S Weinberg
 // Thick restarted and deflated Lanczos.
-// Points out where some type of polynomial
-// acceleration could go in.
+// Finds some number of exterior largest or
+// smallest values, NOT in magnitude.
+// (Doesn't try solve the interior problem,
+// though there is a way to trick it with the 
+// operator (A-sigma)^2 ...)
 // Based on arXiv:1512:08135
 
 #include <iostream>
@@ -12,13 +15,22 @@
 #include <complex>
 #include <random>
 #include <vector>
+#include <functional>
 
 // Borrow dense matrix eigenvalue routines.
 #include <Eigen/Dense>
 
 #include "blas/generic_vector.h"
 
-#include "square_laplace.h"
+#include "../square_laplace.h"
+
+// Operator class
+#include "../operator.h"
+#include "../poly_operator.h"
+
+// Lanczos
+#include "../lanczos.h"
+#include "../thick_deflate_lanczos.h"
 
 using namespace std; 
 using namespace Eigen;
@@ -42,7 +54,7 @@ int main(int argc, char** argv)
   double inv_variance = 6.0; // inverse of variance for gaussian non-compact U(1) links.
 
   // Basic information about the lattice.
-  int length = 8;
+  int length = 24;
   double m_sq = 0.001;
   
   // Some start-up.
@@ -67,257 +79,146 @@ int main(int argc, char** argv)
 
   // Uncomment this to get the free field.
   //constant_vector(gauge_links, 1.0, 2*volume);
+  //std::cout << "Free case.\n\n";
+
+  std::cout << "Interacting case.\n\n";
+
+
+  //////////////////////////////////////
+  // Create a linear operator object. //
+  //////////////////////////////////////
+
+  FunctionWrapper<complex<double>> lap_fcn(square_laplacian_gauged, &lapstr_gauged, volume);
 
 
   //////////////////////////////////////
   // Properties for Lanczos algorithm //
   //////////////////////////////////////
 
-  int max_iterations = 20; // maximum number of restarts
-  int max_no_TR_candidates = 2; // maximum number of times we press on when there's
-                                // no TR candidate
-  int max_no_TM_eig_candidates = 2; // maximum number of times we press on when there's
-                                    // no candidates in TM
-  int m = 30; // Max subspace size before restart
-  double tol = 1e-8; // Tolerance of eigenvalue computation
+  // Fill a struct
+  TRCLStruct lanc_props;
+  lanc_props.n_ev = 10; // get 10 eigenvalues
+  lanc_props.m = 30; // subspace size of 20
+  lanc_props.tol = 1e-10; // lock at a tolerance of 1e-8
+  lanc_props.max_restarts = 500; // maximum of 10 restarts
+  lanc_props.preserved_space = 10; // space preserved after restart,
+                                  // set to -1 to default to m/4+1
+  lanc_props.deflate = false; // don't deflate locked eigenvalues
+  lanc_props.generator = &generator; // passed by reference
+  lanc_props.verbose = false;
 
-  // We're looking to grab all eigenvalues in the interval below
-  // If we switched to a polynomial acceleration scheme, we'd look
-  // for all eigenvalues above some value.
-  // This is a choice! I'll make it clear below where to modify
-  // this stopping condition.
-  double eig_ceil = 2.0;
-  double eig_floor = 1e-6; // Avoid deflated modes
+  // Get the smallest eigenvalues
+  ThickRestartComplexLanczos<double,std::less<double>> lanczos(&lap_fcn, lanc_props);
 
+  //////////////
+  // Compute! //
+  //////////////
 
-  //////////////////////////////////////////
-  // Prepare memory for Lanczos algorithm //
-  //////////////////////////////////////////
+  lanczos.compute();
 
-  // Allocate Lanczos space. Extra vector needed for restarts.
-  complex<double>** Q = new complex<double>*[m+1];
-  for (int i = 0; i < m+1; i++) {
-    Q[i] = allocate_vector<complex<double>>(volume);
+  // Get number of converged eigenvalues
+  int n_converged = lanczos.num_converged();
+
+  // Get the eigenvalues
+  double* eigenvalues = new double[n_converged];
+  lanczos.ritzvalues(eigenvalues);
+
+  // Print the Ritz values
+  std::cout << "The " << n_converged << " converged eigenvalues are:\n";
+  for (int i = 0; i < n_converged; i++) {
+    std::cout << eigenvalues[i] << "\n";
   }
 
-  // Extra beta for restarts
-  double beta_restart = 0.0;
-
-  // Storage for locked vectors!
-  std::vector<complex<double>> lambda;
-  std::vector<complex<double>*> U;
-
-  // Intermediate vectors
-  complex<double>* w = allocate_vector<complex<double>>(volume);
-  complex<double>* lambda_x_u = allocate_vector<complex<double>>(volume);
-
-  // Allocate T_m matrix (tridiagonal in un-restarted case).
-  // Can generally be complex because of the restart
-  cMatrix Tm = cMatrix::Zero(m,m);
-
-  // Prepare an eigensolver
-  SelfAdjointEigenSolver<cMatrix> eigsolve_Tm(m);
-
-  ////////////////////////
-  // Begin the Lanczos! //
-  ////////////////////////
-
-  // Prepare a random unit vector for Q[0]!
-  gaussian(Q[0], volume, generator);
-  normalize(Q[0], volume);
-
-  int iters = 0;
-  int l = 0;
-  int locked = 0;
-  int num_no_TR_candidates = 0;
-  int num_no_TM_eig_candidates = 0;
-
-  // Let's gooooo
-  while (iters < max_iterations) {
-    // last bit of thick restart. put s in correct place.
-    if (l > 0) {
-      for (int i = 0; i < l; i++) {
-        Tm(l,i) = Tm(m-1,i);
-        Tm(m-1,i) = 0.0;
-        Tm(i,l) = conj(Tm(l,i));
-      }
-    }
-
-    // If we're not on the first iter, T_m has values filled in.
-    // Fill out rest of T_m. Standard lanczos!
-    for (int i = l; i < m; i++) {
-      zero_vector(w, volume);
-
-      // PUT IN POLY ACCELERATION HERE
-      square_laplacian_gauged(w, Q[i], &lapstr_gauged); // w = B q_i
-      // deflate
-      for (int j = 0; j < locked; j++) {
-        complex<double> dotprod = dot(U[j], w, volume);
-        caxpy(-dotprod, U[j], w, volume);
-      }
-
-      if (i > l) {
-        caxpy(-Tm(i-1,i), Q[i-1], w, volume); // w -= beta_i q_{i-1}
-      }
-
-      // Compute alpha_i
-      Tm(i,i) = re_dot(Q[i], w, volume);
-
-      // w -= alpha_i q_i
-      caxpy(-Tm(i,i), Q[i], w, volume);
-
-      // Reorthogonalize
-      for (int j = 0; j < i; j++) {
-        orthogonal(w, Q[j], volume);
-      }
-
-      // Compute beta_{i+1}
-      double beta = sqrt(norm2sq(w,volume));
-
-      if (i == m-1) {
-        beta_restart = beta;
-      } else {
-        Tm(i+1,i) = Tm(i,i+1) = beta;
-      }
-
-      // Check for breakdown
-      if (beta < 1e-10) {
-        gaussian(Q[i+1], volume, generator);
-        normalize(Q[i+1], volume);
-      } else {
-        caxy(1.0/beta, w, Q[i+1], volume);
-      }   
-    }
-
-    iters++;
-
-    // Calculate the Ritz values
-    eigsolve_Tm.compute(Tm);
-    std::cout << "The Ritz values are:\n" << eigsolve_Tm.eigenvalues().transpose() << "\n";
-    std::cout << std::flush;
-
-    // Compute candidate pairs---evals between the min and max.
-    // There's lots of potential for memory reuse here...
-    std::vector<complex<double>> theta_candidate;
-    std::vector<complex<double>> s_candidate; // used for restart
-    std::vector<complex<double>*> u_candidate;
-
-    for (int i = 0; i < m; i++) {
-      double eval = eigsolve_Tm.eigenvalues()(i);
-      if (eval > eig_floor && eval < eig_ceil) {
-        // Add it as a candidate pair
-        theta_candidate.push_back(eval);
-        s_candidate.push_back(beta_restart*eigsolve_Tm.eigenvectors().col(i)(m-1)); 
-
-        // Build up the Ritz vector
-        u_candidate.push_back(allocate_vector<complex<double>>(volume));
-        zero_vector(u_candidate[u_candidate.size()-1], volume);
-        for (int j = 0; j < m; j++) {
-          caxpy(eigsolve_Tm.eigenvectors().col(i)(j), Q[j], u_candidate[u_candidate.size()-1], volume);
-        }
-      }
-    }
-
-    // Zero out all Q except the last one!
-    for (int i = 0; i < m; i++) {
-      zero_vector(Q[i], volume);
-    }
-
-    int num_candidate = theta_candidate.size();
-
-    // if no candidates were found, quit.
-    // Might be a sign we've found all the eigenvalues... or not.
-    // Needs a smarter heuristic. Again, should be safer
-    // with poly accel.
-    if (num_candidate == 0) {
-
-      num_no_TM_eig_candidates++;
-      std::cout << "No TM eigenvalue candidates: " << num_no_TM_eig_candidates << ".\n";
-      if (num_no_TM_eig_candidates == max_no_TM_eig_candidates) {
-        std::cout << "Max number of times with no candidate TM eigenvalues reached.\n";
-        break;
-      } else {
-        l = 0;
-        Tm = cMatrix::Zero(m,m);
-        copy_vector(Q[0], Q[m], volume);
-        continue;
-      }
-    }
-
-    // Reset l
-    l = 0;
-
-
-    // Zero out Tm, start rebuilding
-    Tm = cMatrix::Zero(m,m);
-
-    for (int i = 0; i < num_candidate; i++) {
-      // Compute Rayleigh value. Technically wasteful
-      // because we aren't doing poly accel.
-      // Reuse w.
-      zero_vector(w, volume);
-      square_laplacian_gauged(w, u_candidate[i], &lapstr_gauged);
-
-      double rayleigh = re_dot(u_candidate[i], w, volume);
-
-      // Make sure we're in the target range
-      if (rayleigh > eig_ceil || rayleigh < eig_floor) { continue; }
-
-      // check convergence
-      caxy(rayleigh, u_candidate[i], lambda_x_u, volume);
-      if (sqrt(diffnorm2sq(w, lambda_x_u, volume))/rayleigh < tol) {
-        // We've got a lock!
-        lambda.push_back(rayleigh);
-        U.push_back(allocate_vector<complex<double>>(volume));
-        copy_vector(U[locked], u_candidate[i], volume);
-        normalize(U[locked], volume);
-        locked++;
-      } else {
-        // Add it to the thick restart set
-        copy_vector(Q[l], u_candidate[i], volume);
-        Tm(l,l) = eigsolve_Tm.eigenvalues()(i);
-
-        // Store s somewhere safe
-        Tm(m-1,l) = s_candidate[i];
-
-        l++;
-      }
-    }
-
-    // Clean up candidates.
-    for (int i = 0; i < num_candidate; i++) {
-      deallocate_vector(&u_candidate[i]);
-    }
-
-    // If there are no vectors in the thick restart set, quit.
-    if (l == 0) {
-      num_no_TR_candidates++;
-      std::cout << "No thick restart vectors: " << num_no_TR_candidates << ".\n";
-      if (num_no_TR_candidates == max_no_TR_candidates) {
-        std::cout << "Max number of times with no thick restart vectors reached.\n";
-        break;
-      }
-    }
-
-    // Put last Q in place.
-    copy_vector(Q[l], Q[m], volume);
-
+  // Get converged eigenvectors
+  complex<double>** eigenvectors = new complex<double>*[n_converged];
+  for (int i = 0; i < n_converged; i++) {
+    eigenvectors[i] = allocate_vector<complex<double>>(volume);
   }
 
-  if (iters == max_iterations) {
-    std::cout << "Hit maximum iterations.\n" << "\n";
-  }
+  // Get the Ritz vectors
+  lanczos.ritzvectors(eigenvectors);
 
-  // Uh... I guess we have eigenvalues.
-  std::cout << "Computed eigenvalues.\n";
-  for (unsigned int i = 0; i < lambda.size(); i++) {
-    std::cout << lambda[i] << "\n";
+  ///////////////////////////////////////////
+  // Do the polynomial accelerated version //
+  ///////////////////////////////////////////
+
+  std::cout << "\nPolynomial Accleration\n";
+
+  // Get approximate bounds from a small Lanczos
+  const int m_mini = 6;
+  SimpleComplexLanczos<double> simp_lanczos(&lap_fcn, m_mini, generator);
+  simp_lanczos.compute();
+  double approx_eigs[m_mini];
+  simp_lanczos.ritzvalues((double*)approx_eigs);
+  // print the approximate eigenvalues
+  std::cout << "The " << m_mini << " Ritz values are:\n";
+  for (int i = 0; i < m_mini; i++) {
+    std::cout << approx_eigs[i] << "\n";
   }
   std::cout << "\n";
+  double approx_min = approx_eigs[0]; // get the approximate min
+  double approx_max = approx_eigs[m_mini-1]*1.2; // and overshoot the max
+  std::cout << "The linear op window is " << approx_min << " to " << approx_max << "\n\n";
+
+  // Make a linear interpolation of the laplace op.
+  LinearMapToUnit<complex<double>,double> linear_lap(&lap_fcn, approx_min, approx_max);
+
+  // And make the 20th order poly accelerated form
+  OneOverOnePlusX<complex<double> > poly_accel(&linear_lap, 50);
 
 
+  // Fill a struct
+  TRCLStruct poly_lanc_props;
+  poly_lanc_props.n_ev = 10; // get 10 eigenvalues
+  poly_lanc_props.m = 30; // subspace size of 20
+  poly_lanc_props.tol = 1e-10; // lock at a tolerance of 1e-8
+  poly_lanc_props.max_restarts = 20; // maximum of 10 restarts
+  poly_lanc_props.preserved_space = 10; // space preserved after restart,
+                                  // set to -1 to default to m/4+1
+  poly_lanc_props.deflate = true; // deflate locked eigenvalues
+  poly_lanc_props.generator = &generator; // passed by reference
+  poly_lanc_props.verbose = false;
 
-  /**/
+  // Get the largest eigenvalues, since we're poly acceling
+  ThickRestartComplexLanczos<double,std::greater<double>> poly_lanczos(&poly_accel, poly_lanc_props);
+  poly_lanczos.compute();
+  int n_poly_converged = poly_lanczos.num_converged();
+  std::cout << n_poly_converged << "\n";
+
+  // Get the poly eigenvalues
+  double* poly_eigenvalues = new double[n_poly_converged];
+  poly_lanczos.ritzvalues(poly_eigenvalues);
+
+  // Print the Ritz values
+  std::cout << "The " << n_poly_converged << " converged eigenvalues are:\n";
+  for (int i = 0; i < n_poly_converged; i++) {
+    std::cout << poly_eigenvalues[i] << "\n";
+  }
+
+  // Get the poly eigenvectors
+  complex<double>** poly_eigenvectors = new complex<double>*[n_poly_converged];
+  for (int i = 0; i < n_poly_converged; i++) {
+    poly_eigenvectors[i] = allocate_vector<complex<double>>(volume);
+  }
+
+  // Get the Ritz vectors
+  poly_lanczos.ritzvectors(poly_eigenvectors);
+
+  // Get eigenvalues of original system
+  complex<double>* intermediate = allocate_vector<complex<double>>(volume);
+  std::cout << "\nThe " << n_poly_converged << " reconstructed eigenvalues are:\n";
+  for (int i = 0; i < n_poly_converged; i++) {
+    zero_vector(intermediate, volume);
+    lap_fcn(intermediate, poly_eigenvectors[i]);
+    double rec_eval = re_dot(poly_eigenvectors[i], intermediate, volume);
+    std::cout << rec_eval << "\n";
+  }
+  
+
+  //////////////////////////
+  // Get all eigenvalues! //
+  //////////////////////////
+
 
   if (volume <= 256) {
 
@@ -354,8 +255,8 @@ int main(int argc, char** argv)
     std::cout << "Compare results:\n\n";
     std::cout << "Lanczos Exact Ratio\n";
     for (int i = 0; i < volume; i++) {
-      std::cout << U[0][i] << " " << eigsolve_cplx.eigenvectors().col(0)(i)
-                << " " << U[0][i]/eigsolve_cplx.eigenvectors().col(0)(i) << "\n";
+      std::cout << eigenvectors[0][i] << " " << eigsolve_cplx.eigenvectors().col(0)(i)
+                << " " << eigenvectors[0][i]/eigsolve_cplx.eigenvectors().col(0)(i) << "\n";
     }
   }
 
@@ -363,13 +264,17 @@ int main(int argc, char** argv)
   // CLEAN UP //
   //////////////
 
-  deallocate_vector(&w);
-  deallocate_vector(&lambda_x_u);
-
-  for (int i = 0; i <= m; i++) {
-    deallocate_vector(&Q[i]);
+  delete[] eigenvalues;
+  delete[] poly_eigenvalues;
+  for (int i = 0; i < n_converged; i++) {
+    deallocate_vector(&eigenvectors[i]);
   }
-  delete[] Q;
+  delete[] eigenvectors;
+  for (int i = 0; i < n_poly_converged; i++) {
+    deallocate_vector(&poly_eigenvectors[i]);
+  }
+  delete[] poly_eigenvectors;
+  deallocate_vector(&intermediate);
 
   deallocate_vector(&rhs_cplx);
   deallocate_vector(&gauge_links);

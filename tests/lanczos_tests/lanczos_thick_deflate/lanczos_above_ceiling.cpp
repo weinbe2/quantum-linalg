@@ -26,155 +26,6 @@ using namespace Eigen;
 typedef Matrix<double, Dynamic, Dynamic, ColMajor> dMatrix;
 typedef Matrix<std::complex<double>, Dynamic, Dynamic, ColMajor> cMatrix;
 
-#ifndef QLINALG_FCN_POINTER
-#define QLINALG_FCN_POINTER
-typedef void (*matrix_op_real)(double*,double*,void*);
-typedef void (*matrix_op_cplx)(complex<double>*,complex<double>*,void*);
-#endif
-
-// Operator
-template <typename T>
-class Operator {
-protected:
-  int length;
-
-public:
-  Operator(int length)
-   : length(length)
-  {;}
-
-  virtual void operator()(T* out, T* in) = 0;
-
-  int get_length()
-  {
-    return length;
-  }
-
-  static void operator_apply(T* out, T* in, void* data)
-  {
-    Operator* op = dynamic_cast<Operator*>(data);
-    (*op)(out,in);
-  }
-};
-
-// Function pointer wrapper
-template <typename T>
-class FunctionWrapper : public Operator<T> {
-
-protected:
-  matrix_op_cplx fcn;
-  void* data;
-
-public:
-  FunctionWrapper(matrix_op_cplx fcn, void* data, int length)
-   : Operator<T>(length), fcn(fcn), data(data)
-  { ; }
-
-  void operator()(T* out, T* in)
-  {
-    // Default: identity
-    (*fcn)(out, in, data);
-  }
-};
-
-// Linear map from [a,b] to [-1,1]
-template <typename T, typename U>
-class LinearMapToUnit : public Operator<T> {
-protected:
-  using Operator<T>::length;
-
-  Operator<T>* op;
-  const U a,b;
-  T* tmp;
-
-  U slope, shift;
-
-public:
-  LinearMapToUnit(Operator<T>* op, const U a, const U b)
-   : Operator<T>(op->get_length()), op(op), a(a), b(b)
-  {
-    tmp = allocate_vector<T>(length);
-    U c = 0.5*(a+b);
-    U d = 0.5*(b-a);
-
-    slope = 1.0/d;
-    shift = -c*slope;
-  }
-
-  ~LinearMapToUnit()
-  {
-    deallocate_vector(&tmp);
-  }
-
-  void operator()(T* out, T* in)
-  {
-    zero_vector(tmp, length);
-    op(tmp, in);
-    caxpbyz(slope, tmp, shift, in, out, length);
-  }
-};
-
-// Apply the series of 1/(1+x)
-template <typename T>
-class OneOverOnePlusX : public Operator<T> {
-protected:
-  using Operator<T>::length;
-
-  Operator<T>* op;
-  int order;
-  T* tmp;
-  T* tmp2;
-
-public:
-  OneOverOnePlusX(Operator<T>* op, int order)
-   : Operator<T>(op->get_length()), op(op), order(order)
-  {
-    tmp = allocate_vector<T>(length);
-    tmp2 = allocate_vector<T>(length);
-  }
-
-  ~OneOverOnePlusX()
-  {
-    deallocate_vector(&tmp);
-    deallocate_vector(&tmp2);
-  }
-
-  void operator()(T* out, T* in)
-  {
-    // Apply the series for 1/(1+x) to whatever order
-    copy_vector(out, in, length);
-    copy_vector(tmp, in, length);
-
-    for (int i = 0; i < order; i++)
-    {
-      // Apply the operator
-      (*op)(tmp2, tmp);
-
-      // accumulate
-      caxpy((i%2 == 0) ? -1.0 : 1.0, tmp2, out, length);
-
-      std::cout << "Step " << i << " tmp: " << tmp[0] << " tmp2: " << tmp2[0] << " Val: " << out[0] << "\n";
-
-      // pointer swap
-      std::swap(tmp, tmp2);
-
-
-    }
-
-  }
-};
-
-// Simple test
-void identity_function(complex<double>* out, complex<double>* in, void* data)
-{
-  out[0] = in[0];
-}
-
-void one_half_function(complex<double>* out, complex<double>* in, void* data)
-{
-  out[0] = 0.5*in[0];
-}
-
 int main(int argc, char** argv)
 {  
   complex<double> *rhs_cplx;
@@ -218,21 +69,6 @@ int main(int argc, char** argv)
   //constant_vector(gauge_links, 1.0, 2*volume);
 
 
-  FunctionWrapper<complex<double>> fcn(identity_function, nullptr, 1);
-  complex<double> in = 2.0;
-  complex<double> out = 0.0;
-  fcn(&out, &in);
-
-  std::cout << "Val: " << in << " Fcn: " << out << "\n";
-
-  FunctionWrapper<complex<double>> ohalf(one_half_function, nullptr, 1);
-  OneOverOnePlusX<complex<double>> rational(&ohalf, 2); 
-  complex<double> in1 = 1.0;
-  complex<double> out1 = 0.0;
-  rational(&out1, &in1);
-  std::cout << "Val: " << in1 << " Series: " << out1 << " Exact: " << 1.0/(1.0+0.5) << "\n";
-  return 0;
-
   //////////////////////////////////////
   // Properties for Lanczos algorithm //
   //////////////////////////////////////
@@ -242,7 +78,7 @@ int main(int argc, char** argv)
                                 // no TR candidate
   int max_no_TM_eig_candidates = 2; // maximum number of times we press on when there's
                                     // no candidates in TM
-  int m = 30; // Max subspace size before restart
+  int m = 20; // Max subspace size before restart
   double tol = 1e-8; // Tolerance of eigenvalue computation
 
   // We're looking to grab all eigenvalues in the interval below
