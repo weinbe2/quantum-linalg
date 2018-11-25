@@ -44,7 +44,7 @@ int main(int argc, char** argv)
   // max iter
   int max_iter = 100000;
 
-  // Set tolerances below.
+  // Set tolerances below.I'll nonetheless type the proof up tomorrow, but in any case, I'm feeling good
 
   // Some start-up.
   int volume = length*length;

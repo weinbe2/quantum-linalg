@@ -32,7 +32,7 @@ public:
 
   static void operator_apply(T* out, T* in, void* data)
   {
-    Operator* op = dynamic_cast<Operator*>(data);
+    Operator* op = static_cast<Operator*>(data);
     (*op)(out,in);
   }
 };

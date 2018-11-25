@@ -11,6 +11,7 @@
 
 #include "inverters/generic_richardson.h"
 #include "inverters/generic_minres.h"
+#include "inverters/generic_cheby_iters.h"
 #include "inverters/generic_cg.h"
 #include "inverters/generic_bicgstab.h"
 #include "inverters/generic_bicgstab_l.h"
@@ -34,6 +35,11 @@ void square_laplacian(double* lhs, double* rhs, void* extra_data);
 // the square laplace equation with 8 iterations of CG (I know this is
 // a silly preconditioner, but it's meant to demonstrate a point).
 void square_laplacian_cgpreconditioner(double* lhs, double* rhs, int size, void* extra_data, inversion_verbose_struct* verb);
+
+// Reference preconditioning function, which preconditions solving
+// the square laplace equation with 8 iterations of Cheby iterations
+void square_laplacian_chebypreconditioner(double* lhs, double* rhs, int size, void* extra_data, inversion_verbose_struct* verb);
+
 
 // Prepare vectors for various tests.
 void reset_vectors(double* rhs, double* lhs, double* check, int length)
@@ -128,6 +134,23 @@ int main(int argc, char** argv)
   /* MinRes w/ Relaxation param. */
   reset_vectors(rhs, lhs, check, length);
   invif = minv_vector_minres(lhs, rhs, volume, max_iter, tol, minres_relaxation_param, square_laplacian, &lapstr);
+  if (invif.success == true)
+  {
+    printf("Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
+  }
+  else // failed, maybe.
+  {
+    printf("Potential error! Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
+  }
+  printf("Computing [check] = A [lhs] as a confirmation.\n");
+  // Check and make sure we get the right answer.
+  square_laplacian(check, lhs, &lapstr);
+  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
+  
+  /* Cheby iterations w/ known eigenvalues */
+  reset_vectors(rhs, lhs, check, length);
+  invif = minv_vector_cheby_iters(lhs, rhs, volume, max_iter, tol, m_sq, 8.0+m_sq, 10, square_laplacian, &lapstr);
   if (invif.success == true)
   {
     printf("Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
@@ -264,6 +287,23 @@ int main(int argc, char** argv)
   explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
   printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
   
+  /* Variably preconditioned CG */
+  reset_vectors(rhs, lhs, check, length); 
+  invif = minv_vector_cg_precond(lhs, rhs, volume, max_iter, tol, square_laplacian, &lapstr, square_laplacian_chebypreconditioner, &lapstr);
+  if (invif.success == true)
+  {
+    printf("Algorithm %s (Cheby) took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
+  }
+  else // failed, maybe.
+  {
+    printf("Potential error! Algorithm %s (Cheby) took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
+  }
+  printf("Computing [check] = A [lhs] as a confirmation.\n");
+  // Check and make sure we get the right answer.
+  square_laplacian(check, lhs, &lapstr);
+  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
+  
   
   /* Variably preconditioned GCR */
   reset_vectors(rhs, lhs, check, length); 
@@ -275,6 +315,23 @@ int main(int argc, char** argv)
   else // failed, maybe.
   {
     printf("Potential error! Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
+  }
+  printf("Computing [check] = A [lhs] as a confirmation.\n");
+  // Check and make sure we get the right answer.
+  square_laplacian(check, lhs, &lapstr);
+  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
+
+  /* Variably preconditioned GCR, Cheby */
+  reset_vectors(rhs, lhs, check, length); 
+  invif = minv_vector_gcr_var_precond(lhs, rhs, volume, max_iter, tol, square_laplacian, &lapstr, square_laplacian_chebypreconditioner, &lapstr);
+  if (invif.success == true)
+  {
+    printf("Algorithm %s (Cheby) took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
+  }
+  else // failed, maybe.
+  {
+    printf("Potential error! Algorithm %s (Cheby) took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
   }
   printf("Computing [check] = A [lhs] as a confirmation.\n");
   // Check and make sure we get the right answer.
@@ -439,4 +496,14 @@ void square_laplacian_cgpreconditioner(double* lhs, double* rhs, int size, void*
   // This would avoid hard coding everything.
 }
 
+// Reference preconditioning function, which preconditions solving
+// the square laplace equation with 8 iterations of Cheby
+void square_laplacian_chebypreconditioner(double* lhs, double* rhs, int size, void* extra_data, inversion_verbose_struct* verb)
+{
+  laplace_struct* lapstr = (laplace_struct*)extra_data;
 
+  // Run 8 iterations of Cheby
+  // 8-> max of 8 iterations
+  minv_vector_cheby_iters(lhs, rhs, size, 8, 1e-15, lapstr->m_sq, 8.0+lapstr->m_sq, 8, square_laplacian, extra_data, verb);
+
+}

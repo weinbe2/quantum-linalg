@@ -10,8 +10,11 @@
 
 #include "blas/generic_vector.h"
 
+#include "verbosity/verbosity.h"
+
 #include "inverters/generic_richardson.h"
 #include "inverters/generic_minres.h"
+#include "inverters/generic_cheby_iters.h"
 #include "inverters/generic_cg.h"
 #include "inverters/generic_bicgstab.h"
 #include "inverters/generic_bicgstab_l.h"
@@ -96,6 +99,9 @@ int main(int argc, char** argv)
   // Zero out vectors, set rhs point.
   // zero_vector(lattice, 2*volume);
   reset_vectors(rhs, lhs, check, length);
+
+  // Verbosity info
+  inversion_verbose_struct verb(VERB_NONE, "");
   
   // Get norm for rhs.
   bnorm = sqrt(norm2sq<double>(rhs, volume));
@@ -141,6 +147,23 @@ int main(int argc, char** argv)
   /* MinRes w/ Relaxation param. */
   reset_vectors(rhs, lhs, check, length);
   invif = minv_vector_minres(lhs, rhs, volume, max_iter, tol, minres_relaxation_param, square_laplacian_gauged, &lapstr);
+  if (invif.success == true)
+  {
+    printf("Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
+  }
+  else // failed, maybe.
+  {
+    printf("Potential error! Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
+  }
+  printf("Computing [check] = A [lhs] as a confirmation.\n");
+  // Check and make sure we get the right answer.
+  square_laplacian_gauged(check, lhs, &lapstr);
+  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
+  
+  /* Cheby iterations w/ approx known eigenvalues */
+  reset_vectors(rhs, lhs, check, length);
+  invif = minv_vector_cheby_iters(lhs, rhs, volume, max_iter, tol, 0.438403+m_sq, 7.5617+m_sq, 10, square_laplacian_gauged, &lapstr, &verb);
   if (invif.success == true)
   {
     printf("Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
