@@ -14,6 +14,29 @@ using std::polar;
 #define PI 3.14159265358979323846
 #endif
 
+// Trait for real version of a type
+template <typename T>
+struct ComplexBase {
+  using type = T;
+  static T real(T val) { return val; }
+  static T imag(T val) { return 0; }
+  static T conj(T val) { return val; }
+};
+
+template <typename T>
+struct ComplexBase<std::complex<T> > {
+  using type = T;
+  static T real(std::complex<T> val) { return val.real(); }
+  static T imag(std::complex<T> val) { return val.imag(); }
+  static std::complex<T> conj(std::complex<T> val) { return std::complex<T>(val.real(), -val.imag()); }
+};
+
+template <typename T> struct Reducer { using type = T; };
+template <> struct Reducer<float> { using type = double; };
+template <> struct Reducer<std::complex<float>> { using type = std::complex<double>; };
+
+template <typename T> struct RealReducer { using type = typename Reducer<typename ComplexBase<T>::type>::type; };
+
 // Create and destroy a vector.
 template<typename T> inline T* allocate_vector(int size)
 {
@@ -501,6 +524,15 @@ template<typename T, typename U = T> inline void caxpbypcz(U a, T* x, U b, T* y,
   }
 }
 
+// Implement caxpbypczw, w = a*x + b*y + cz
+template<typename T, typename U = T> inline void caxpbypcz(U a, T* x, U b, T* y, U c, T* z, T* w, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    w[i] = a*x[i] + b*y[i] + c*z[i];
+  }
+}
+
 
 // Implement caxpyBzpx, y += a*x THEN x += b*z. 
 template<typename T, typename U = T> inline void caxpyBzpx(U a, T* x, T* y, U b, T* z, int size)
@@ -523,53 +555,33 @@ template<typename T, typename U = T> inline void caxpyBxpz(U a, T* x, T* y, U b,
 }
 
 // Computes v1 dot v2.
-template<typename T> inline T dot(T* v1, T* v2, int size)
+template<typename T> inline typename Reducer<T>::type dot(T* v1, T* v2, int size)
 {
-  T res = static_cast<T>(0.0);
+  typename Reducer<T>::type res = static_cast<T>(0.0);
   for (int i = 0; i < size; i++)
   {
-  res = res + v1[i]*v2[i];
-  }
-  return res;
-}
-
-// computes conj(v1) dot v2.
-template <typename T> inline complex<T> dot(complex<T>* v1, complex<T>* v2, int size)
-{
-  complex<T> res = static_cast<T>(0.0);
-  for (int i = 0; i < size; i++)
-  {
-  res = res + conj(v1[i])*v2[i];
+    res = res + ComplexBase<T>::conj(v1[i])*v2[i];
   }
   return res;
 }
 
 // Computes re(conj(v1) dot v2)
 // trivial
-template <typename T> inline T re_dot(T* v1, T* v2, int size)
+template <typename T>
+inline typename RealReducer<T>::type re_dot(T* v1, T* v2, int size)
 {
-  T res = static_cast<T>(0.0);
+  typename RealReducer<T>::type res = 0;
   for (int i = 0; i < size; i++)
   {
-    res = res + v1[i]*v2[i];
+    res = res + ComplexBase<T>::real(ComplexBase<T>::conj(v1[i])*v2[i]);
   }
   return res;
-}
-
-template <typename T> inline T re_dot(complex<T>* v1, complex<T>* v2, int size)
-{
-  complex<T> res = static_cast<T>(0.0);
-  for (int i = 0; i < size; i++)
-  {
-    res = res + conj(v1[i])*v2[i];
-  }
-  return real(res);
 }
 
 // Sum over the contents.
 template <typename T> inline T sum_vector(T* v1, int size)
 {
-  T res = static_cast<T>(0.0);
+  typename Reducer<T>::type res = 0;
   for (int i = 0; i < size; i++)
   {
     res = res + v1[i];
@@ -579,47 +591,22 @@ template <typename T> inline T sum_vector(T* v1, int size)
 
 // Computes the vector norm squared.
 template <typename T>
-inline T norm2sq(T* v1, int size)
+inline typename RealReducer<T>::type norm2sq(T* v1, int size)
 {
-  T res = static_cast<T>(0.0);
+  typename RealReducer<T>::type res = 0;
   for (int i = 0; i < size; i++)
   {
-    res = res + v1[i]*v1[i];
-  }
-  return res;
-}
-
-template <typename T>
-inline T norm2sq(complex<T>* v1, int size)
-{
-  T res = static_cast<T>(0.0);
-  for (int i = 0; i < size; i++)
-  {
-    res = res + real(conj(v1[i])*v1[i]);
+    res = res + ComplexBase<T>::real(ComplexBase<T>::conj(v1[i])*v1[i]);
   }
   return res;
 }
 
 // Return the infinity norm (max abs element)
 template <typename T>
-inline T norminf(T* v1, int size)
+inline typename RealReducer<T>::type norminf(T* v1, int size)
 {
-  T max_abs = static_cast<T>(0.0);
-  T tmp = static_cast<T>(0.0);
-  for (int i = 0; i < size; i++)
-  {
-    tmp = abs(v1[i]);
-    if (tmp > max_abs)
-      max_abs = tmp;
-  }
-  return max_abs;
-}
-
-template <typename T>
-inline T norminf(complex<T>* v1, int size)
-{
-  T max_abs = static_cast<T>(0.0);
-  T tmp = static_cast<T>(0.0);
+  typename RealReducer<T>::type max_abs = 0;
+  typename RealReducer<T>::type tmp = 0;
   for (int i = 0; i < size; i++)
   {
     tmp = abs(v1[i]);
@@ -631,45 +618,20 @@ inline T norminf(complex<T>* v1, int size)
 
 // Return |v1 - v2|^2
 template <typename T>
-inline T diffnorm2sq(T* v1, T* v2, int size)
+inline typename RealReducer<T>::type diffnorm2sq(T* v1, T* v2, int size)
 {
-  T res = static_cast<T>(0.0);
+  typename RealReducer<T>::type res = 0;
   for (int i = 0; i < size; i++)
   {
-    res = res + (v1[i] - v2[i])*(v1[i] - v2[i]);
+    res = res + ComplexBase<T>::real(ComplexBase<T>::conj(v1[i] - v2[i])*(v1[i] - v2[i]));
   }
   return res;
 }
-
-template <typename T>
-inline T diffnorm2sq(complex<T>* v1, complex<T>* v2, int size)
-{
-  T res = static_cast<T>(0.0);
-  for (int i = 0; i < size; i++)
-  {
-    res = res + real(conj(v1[i] - v2[i])*(v1[i] - v2[i]));
-  }
-  return res;
-}
-  
 
 template <typename T>
 inline void normalize(T* v1, int size)
 {
-  T res = 1.0/sqrt(norm2sq<T>(v1, size));
-  if (res > 0.0)
-  {
-    for (int i = 0; i < size; i++)
-    {
-      v1[i] *= res;
-    }
-  }
-}
-
-template <typename T>
-inline void normalize(complex<T>* v1, int size)
-{
-  T res = 1.0/sqrt(norm2sq<T>(v1, size));
+  typename RealReducer<T>::type res = 1.0/sqrt(norm2sq(v1, size));
   if (res > 0.0)
   {
     for (int i = 0; i < size; i++)
@@ -682,15 +644,9 @@ inline void normalize(complex<T>* v1, int size)
 template <typename T>
 inline void conj_vector(T* v1, int size)
 {
-  return; // Trivial, it's real.
-}
-
-template <typename T>
-inline void conj_vector(complex<T>* v1, int size)
-{
   for (int i = 0; i < size; i++)
   {
-    v1[i] = conj(v1[i]);
+    v1[i] = ComplexBase<T>::conj(v1[i]);
   }
 }
 
@@ -698,18 +654,7 @@ inline void conj_vector(complex<T>* v1, int size)
 template <typename T>
 inline void orthogonal(T* v1, T* v2, int size)
 {
-  T alpha = -dot<T>(v2, v1, size)/norm2sq<T>(v2, size);   
-  for (int i = 0; i < size; i++)
-  {
-    v1[i] = v1[i] + alpha*v2[i];
-  }
-}
-
-// Make vector v1 orthogonal to vector v2. 
-template <typename T>
-inline void orthogonal(complex<T>* v1, complex<T>* v2, int size)
-{
-  complex<T> alpha = -dot<T>(v2, v1, size)/norm2sq<T>(v2, size);   
+  T alpha = -dot<T>(v2, v1, size)/norm2sq(v2, size);   
   for (int i = 0; i < size; i++)
   {
     v1[i] = v1[i] + alpha*v2[i];

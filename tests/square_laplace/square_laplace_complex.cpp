@@ -55,6 +55,7 @@ int main(int argc, char** argv)
   complex<double> *lhs, *rhs, *check; // For some Kinetic terms.
   complex<double> *gauge_links; 
   double explicit_resid = 0.0;
+  
   double bnorm = 0.0;
   inversion_info invif;
   std::mt19937 generator (1337u); // RNG, 1337u is the seed. 
@@ -104,7 +105,7 @@ int main(int argc, char** argv)
   inversion_verbose_struct verb(VERB_NONE, "");
   
   // Get norm for rhs.
-  bnorm = sqrt(norm2sq<double>(rhs, volume));
+  bnorm = sqrt(norm2sq(rhs, volume));
 
   printf("Solving A [lhs] = [rhs] for lhs, using a point source. Single mass test: m^2 = %f.\n\n", m_sq);
 
@@ -140,7 +141,7 @@ int main(int argc, char** argv)
   printf("Computing [check] = A [lhs] as a confirmation.\n");
   // Check and make sure we get the right answer.
   square_laplacian_gauged(check, lhs, &lapstr);
-  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  explicit_resid = sqrt(diffnorm2sq(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
   printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
   
 
@@ -158,7 +159,7 @@ int main(int argc, char** argv)
   printf("Computing [check] = A [lhs] as a confirmation.\n");
   // Check and make sure we get the right answer.
   square_laplacian_gauged(check, lhs, &lapstr);
-  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  explicit_resid = sqrt(diffnorm2sq(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
   printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
   
   /* Cheby iterations w/ approx known eigenvalues */
@@ -175,7 +176,7 @@ int main(int argc, char** argv)
   printf("Computing [check] = A [lhs] as a confirmation.\n");
   // Check and make sure we get the right answer.
   square_laplacian_gauged(check, lhs, &lapstr);
-  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  explicit_resid = sqrt(diffnorm2sq(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
   printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
   
 
@@ -193,7 +194,7 @@ int main(int argc, char** argv)
   printf("Computing [check] = A [lhs] as a confirmation.\n");
   // Check and make sure we get the right answer.
   square_laplacian_gauged(check, lhs, &lapstr);
-  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  explicit_resid = sqrt(diffnorm2sq(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
   printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
   
   /* BiCGstab */
@@ -210,7 +211,7 @@ int main(int argc, char** argv)
   printf("Computing [check] = A [lhs] as a confirmation.\n");
   // Check and make sure we get the right answer.
   square_laplacian_gauged(check, lhs, &lapstr);
-  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  explicit_resid = sqrt(diffnorm2sq(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
   printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
   
   /* BiCGstab-L */
@@ -227,7 +228,7 @@ int main(int argc, char** argv)
   printf("Computing [check] = A [lhs] as a confirmation.\n");
   // Check and make sure we get the right answer.
   square_laplacian_gauged(check, lhs, &lapstr);
-  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  explicit_resid = sqrt(diffnorm2sq(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
   printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
   
   /* Restarted GCR */
@@ -244,7 +245,7 @@ int main(int argc, char** argv)
   printf("Computing [check] = A [lhs] as a confirmation.\n");
   // Check and make sure we get the right answer.
   square_laplacian_gauged(check, lhs, &lapstr);
-  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  explicit_resid = sqrt(diffnorm2sq(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
   printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
 
   /* TFQMR */
@@ -261,7 +262,7 @@ int main(int argc, char** argv)
   printf("Computing [check] = A [lhs] as a confirmation.\n");
   // Check and make sure we get the right answer.
   square_laplacian_gauged(check, lhs, &lapstr);
-  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  explicit_resid = sqrt(diffnorm2sq(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
   printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
   
   /************************
@@ -297,7 +298,7 @@ int main(int argc, char** argv)
   printf("Computing [check] = A [lhs] as a confirmation.\n");
   // Check and make sure we get the right answer.
   square_laplacian_gauged(check, lhs, &lapstr);
-  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  explicit_resid = sqrt(diffnorm2sq(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
   printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
   
   
@@ -315,7 +316,7 @@ int main(int argc, char** argv)
   printf("Computing [check] = A [lhs] as a confirmation.\n");
   // Check and make sure we get the right answer.
   square_laplacian_gauged(check, lhs, &lapstr);
-  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  explicit_resid = sqrt(diffnorm2sq(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
   printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
   
   /********************
@@ -375,19 +376,19 @@ int main(int argc, char** argv)
   // Check and make sure we get the right answer.
   lapstr.m_sq = m_sq + shifts[0];
   square_laplacian_gauged(check, multi_lhs[0], &lapstr);
-  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  explicit_resid = sqrt(diffnorm2sq(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
   printf("[check] should equal [rhs]. The residual is %15.20e.\n", explicit_resid);
   printf("Computing [check] = A [lhs][1] as a confirmation.\n");
   // Check and make sure we get the right answer.
   lapstr.m_sq = m_sq + shifts[1];
   square_laplacian_gauged(check, multi_lhs[1], &lapstr);
-  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  explicit_resid = sqrt(diffnorm2sq(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
   printf("[check] should equal [rhs]. The residual is %15.20e.\n", explicit_resid);
   printf("Computing [check] = A [lhs][1] as a confirmation.\n");
   // Check and make sure we get the right answer.
   lapstr.m_sq = m_sq + shifts[2];
   square_laplacian_gauged(check, multi_lhs[2], &lapstr);
-  explicit_resid = sqrt(diffnorm2sq<double>(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  explicit_resid = sqrt(diffnorm2sq(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
   printf("[check] should equal [rhs]. The residual is %15.20e.\n", explicit_resid);
   lapstr.m_sq = m_sq;
   
