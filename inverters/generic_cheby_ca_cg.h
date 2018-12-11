@@ -1,13 +1,16 @@
 // Copyright (c) 2018 Evan S Weinberg
 // CG inverter.
-// Solves lhs = A^(-1) rhs with CA-CG.
-// https://research.nvidia.com/sites/default/files/pubs/2016-04_S-Step-and-Communication-Avoiding/nvr-2016-003.pdf
+// Solves lhs = A^(-1) rhs with Chebyshev basis CA-CG.
+
+// Paper: Communication avoiding multigrid preconditioned conjugate gradient method
+// for extreme scale multiphase CFD simulations
+
 // Assumes the matrix is Hermitian (symmetric) positive definite.
 
 
 
 #ifndef QLINALG_INVERTER_CA_CG
-#define QLINALG_INVERTER_CA_CG
+#define QLINALG_INVERTER_CHEBY_CA_CG
 
 #include <string>
 #include <sstream>
@@ -26,14 +29,20 @@ typedef void (*matrix_op_cplx)(complex<double>*,complex<double>*,void*);
 #include "inverter_struct.h"
 #include "../verbosity/verbosity.h"
 
+#ifndef QLINALG_EIGEN_MATRIX
+#define QLINALG_EIGEN_MATRIX
+typedef Matrix<double, Dynamic, Dynamic, ColMajor> rSquareMatrix;
+typedef Matrix<double, Dynamic, 1> rVector;
+#endif
+
 template <typename T>
-inversion_info minv_vector_ca_cg(T *phi, T *phi0, int size, int max_iter, double eps, int s, void (*matrix_vector)(T*,T*,void*), void* extra_info, inversion_verbose_struct* verb = nullptr)
+inversion_info minv_vector_cheby_ca_cg(T *phi, T *phi0, int size, int max_iter, double eps, int s, void (*matrix_vector)(T*,T*,void*), void* extra_info, inversion_verbose_struct* verb)
 {
 
   int k;
 
   stringstream ss;
-  ss << "CA-CG(s=" << s << ")";
+  ss << "Cheby-CA-CG(s=" << s << ")";
 
   // Initialize vectors.
   T *Tvec[s+1];
@@ -194,7 +203,7 @@ inversion_info minv_vector_ca_cg(T *phi, T *phi0, int size, int max_iter, double
 // Performs CG(restart_freq) with restarts when restart_freq is hit.
 // This may be sloppy, but it works.
 template <typename T>
-inversion_info minv_vector_ca_cg_restart(T *phi, T *phi0, int size, int max_iter, double res, int s, int restart_freq, void (*matrix_vector)(T*,T*,void*), void* extra_info, inversion_verbose_struct* verb = nullptr)
+inversion_info minv_vector_cheby_ca_cg_restart(T *phi, T *phi0, int size, int max_iter, double res, int s, int restart_freq, void (*matrix_vector)(T*,T*,void*), void* extra_info, inversion_verbose_struct* verb)
 {
   int iter; // counts total number of iterations.
   int ops_count; 
@@ -207,12 +216,12 @@ inversion_info minv_vector_ca_cg_restart(T *phi, T *phi0, int size, int max_iter
   shuffle_verbosity_restart(&verb_rest, verb);
   
   stringstream ss;
-  ss << "CA-CG(s=" << s << "," << restart_freq << ")";
+  ss << "Cheby-CA-CG(s=" << s << "," << restart_freq << ")";
   
   iter = 0; ops_count = 0; 
   do
   {
-    invif = minv_vector_ca_cg(phi, phi0, size, min(max_iter, restart_freq), res, s, matrix_vector, extra_info, &verb_rest);
+    invif = minv_vector_cheby_ca_cg(phi, phi0, size, min(max_iter, restart_freq), res, s, matrix_vector, extra_info, &verb_rest);
     iter += invif.iter;
     ops_count += invif.ops_count; 
     
