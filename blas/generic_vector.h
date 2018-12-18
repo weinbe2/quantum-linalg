@@ -232,6 +232,15 @@ template <typename T> inline void arg_vector(complex<T>* u1, T* phase, int size)
   }
 }
 
+// Exponentiate the components of a vector in place
+template <typename T> inline void exp_vector(T* x, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    x[i] = exp(x[i]);
+  }
+}
+
 // Copy v2 into v1.
 template<typename T, typename U = T> inline void copy_vector(T* v1, T* v2, int size)
 {
@@ -427,6 +436,15 @@ template<typename T> inline void cxty(T* x, T* y, int size)
   for (int i = 0; i < size; i++)
   {
     y[i] *= x[i];
+  }
+}
+
+// Implement element-wise cxtyz, z = x*y.
+template<typename T, typename U = T> inline void cxtyz(U* x, T* y, T* z, int size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    z[i] = x[i]*y[i];
   }
 }
 

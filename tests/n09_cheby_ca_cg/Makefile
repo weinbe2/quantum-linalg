@@ -7,8 +7,8 @@ C_SOURCES =
 C_OBJS    = 
 C_INCLUDES  = generic_vector.h verbosity.h
 C_LIBS    = -lm
-EXAMPLES = square_laplace_cheby_ca_cg
-C_EXAMPLES_OBJ = square_laplace_cheby_ca_cg.o
+EXAMPLES = test_cheby_ca_cg
+C_EXAMPLES_OBJ = test_cheby_ca_cg.o
 
 CCX = g++
 #CXXFLAGS =   -std=c99 -g -O2  
@@ -26,14 +26,14 @@ all: $(EXAMPLES)
 #%.o:%.cpp       $(INCLUDES)
 #	$(CCX) -c  $(CXXFLAGS) $(C_SOURCES)
 #
-#square_laplace : square_laplace.o $(C_OBJS)
+#test : test.o $(C_OBJS)
 #	$(CCX) $@.cpp $(CXXFLAGS)  -o $@ $(C_OBJS) $(C_LIBS)
 
 
 %.o:%.cpp	$(INCLUDES)
 	$(CCX) -c  $(CXXFLAGS) $(*:=.cpp)
 
-square_laplace_cheby_ca_cg :  $(C_OBJS)
+test_cheby_ca_cg :  $(C_OBJS)
 	$(CCX) $@.cpp $(CXXFLAGS)  -o $@ $(C_OBJS) $(C_LIBS)
 
 

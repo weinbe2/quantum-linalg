@@ -109,7 +109,7 @@ inversion_info minv_vector_cheby_ca_cg(T *phi, T *phi0, int size, int max_iter, 
     // 5. Compute Q^dag A Q
     for (int i = 0; i < s; i++) {
       for (int j = 0; j < s; j++) {
-        QAQ(i,j) = re_dot(Qvec[j],AQvec[i],size);
+        QAQ(i,j) = re_dot(Qvec[i],AQvec[j],size);
       }
     }
 
@@ -127,14 +127,14 @@ inversion_info minv_vector_cheby_ca_cg(T *phi, T *phi0, int size, int max_iter, 
     }
 
     // 9. Explicitly compute the residual
-    zero_vector(Tvec[0], size);
+    /*zero_vector(Tvec[0], size);
     (*matrix_vector)(Tvec[0], phi, extra_info); invif.ops_count++;
-    cxpayz(phi0, -1.0, Tvec[0], Svec[0], size);
+    cxpayz(phi0, -1.0, Tvec[0], Svec[0], size);*/
 
     // 9. r -= A Q a
-    /*for (int i = 0; i < s; i++) {
+    for (int i = 0; i < s; i++) {
       caxpy(-a(i), AQvec[i], Svec[0], size);
-    }*/
+    }
 
 
     // Check convergence
@@ -169,7 +169,7 @@ inversion_info minv_vector_cheby_ca_cg(T *phi, T *phi0, int size, int max_iter, 
     // 11. Compute Q^dag A S
     for (int i = 0; i < s; i++) {
       for (int j = 0; j < s; j++) {
-        QAS(i,j) = re_dot(Qvec[j], ASvec[i],size);
+        QAS(i,j) = re_dot(Qvec[i], ASvec[j],size);
       }
     }
 
@@ -189,13 +189,13 @@ inversion_info minv_vector_cheby_ca_cg(T *phi, T *phi0, int size, int max_iter, 
       copy_vector(Qvec[i], Tvec[i], size);
     }
 
-    // 14. AQ = AS + AQ B
+    // 14. AQ = AS - AQ B
     for (int i = 0; i < s; i++) {
       copy_vector(Tvec[i], ASvec[i], size);
     }
     for (int i = 0; i < s; i++) {
       for (int j = 0; j < s; j++) {
-        caxpy(B(i,j), AQvec[i], Tvec[j], size);
+        caxpy(-B(i,j), AQvec[i], Tvec[j], size);
       }
     }
     for (int i = 0; i < s; i++) {
