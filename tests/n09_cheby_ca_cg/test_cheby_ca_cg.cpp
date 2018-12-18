@@ -84,7 +84,7 @@ int main(int argc, char** argv)
   std::mt19937 generator (1337u); // RNG, 1337u is the seed. 
 
   // Basic information about the linop
-  int size = 1024;
+  int size = 8192;
   double lambda_min = 1e-6;
   double lambda_max = 10;
   
