@@ -171,7 +171,8 @@ int main(int argc, char** argv)
 
 
     reset_vectors(rhs, lhs, check, rhs_backup, size);
-    invif = minv_vector_cheby_ca_cg(lhs, rhs, size, max_iter, tol, 1.01*lambda_max, ca_s, scale_function, &scinf, &verb);
+    // invif = minv_vector_cheby_ca_cg(lhs, rhs, size, max_iter, tol, 1.01*lambda_max, ca_s, scale_function, &scinf, &verb); // assume lambda_min = 0
+    invif = minv_vector_cheby_ca_cg(lhs, rhs, size, max_iter, tol, lambda_min, lambda_max, ca_s, scale_function, &scinf, &verb);
     if (invif.success == true)
     {
       printf("Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
