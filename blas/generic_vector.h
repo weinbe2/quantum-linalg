@@ -525,7 +525,7 @@ template<typename T, typename U = T> inline void caxpbypcz(U a, T* x, U b, T* y,
 }
 
 // Implement caxpbypczw, w = a*x + b*y + cz
-template<typename T, typename U = T> inline void caxpbypcz(U a, T* x, U b, T* y, U c, T* z, T* w, int size)
+template<typename T, typename U = T> inline void caxpbypczw(U a, T* x, U b, T* y, U c, T* z, T* w, int size)
 {
   for (int i = 0; i < size; i++)
   {

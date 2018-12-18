@@ -16,6 +16,7 @@ using namespace Eigen;
 #include "blas/generic_vector.h"
 #include "inverters/generic_cg.h"
 #include "inverters/generic_ca_cg.h"
+#include "inverters/generic_cheby_ca_cg.h"
 
 #include "square_laplace.h"
 
@@ -127,10 +128,27 @@ int main(int argc, char** argv)
   
 
   /* CA-CG */
-  for (int ca_s = 2; ca_s <= 10; ca_s++)
+  for (int ca_s = 2; ca_s <= 30; ca_s++)
   {
     reset_vectors(rhs, lhs, check, length);
     invif = minv_vector_ca_cg(lhs, rhs, volume, max_iter, tol, ca_s, square_laplacian_gauged, &lapstr, &verb);
+    if (invif.success == true)
+    {
+      printf("Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
+    }
+    else // failed, maybe.
+    {
+      printf("Potential error! Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
+    }
+    printf("Computing [check] = A [lhs] as a confirmation.\n");
+    // Check and make sure we get the right answer.
+    square_laplacian_gauged(check, lhs, &lapstr);
+    explicit_resid = sqrt(diffnorm2sq(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+    printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
+
+
+    reset_vectors(rhs, lhs, check, length);
+    invif = minv_vector_cheby_ca_cg(lhs, rhs, volume, max_iter, tol, 7.5617+m_sq, ca_s, square_laplacian_gauged, &lapstr, &verb);
     if (invif.success == true)
     {
       printf("Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
