@@ -138,9 +138,9 @@ inversion_info minv_vector_cheby_ca_cg(T *phi, T *phi0, int size, int max_iter, 
     }
 
     // 9. Explicitly compute the residual
-    /*zero_vector(Tvec[0], size);
-    (*matrix_vector)(Tvec[0], phi, extra_info); invif.ops_count++;
-    cxpayz(phi0, -1.0, Tvec[0], Svec[0], size);*/
+    //zero_vector(Tvec[0], size);
+    //(*matrix_vector)(Tvec[0], phi, extra_info); invif.ops_count++;
+    //cxpayz(phi0, -1.0, Tvec[0], Svec[0], size);
 
     // 9. r -= A Q a
     for (int i = 0; i < s; i++) {

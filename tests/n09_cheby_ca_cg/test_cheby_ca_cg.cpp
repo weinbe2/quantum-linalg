@@ -90,7 +90,7 @@ int main(int argc, char** argv)
   
   // Parameters related to solve.
   double tol = 1e-8;
-  int max_iter = 300;
+  int max_iter = 1000;
   
   // Vectors. 
   lhs = allocate_vector<complex<double>>(size);
