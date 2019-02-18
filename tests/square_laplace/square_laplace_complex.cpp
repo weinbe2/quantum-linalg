@@ -16,6 +16,7 @@
 #include "inverters/generic_minres.h"
 #include "inverters/generic_cheby_iters.h"
 #include "inverters/generic_cg.h"
+#include "inverters/generic_cr.h"
 #include "inverters/generic_bicgstab.h"
 #include "inverters/generic_bicgstab_l.h"
 #include "inverters/generic_gcr.h"
@@ -197,6 +198,24 @@ int main(int argc, char** argv)
   explicit_resid = sqrt(diffnorm2sq(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
   printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
   
+  /* CR */
+  reset_vectors(rhs, lhs, check, length);
+  invif = minv_vector_cr(lhs, rhs, volume, max_iter, tol, square_laplacian_gauged, &lapstr);
+  if (invif.success == true)
+  {
+    printf("Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
+  }
+  else // failed, maybe.
+  {
+    printf("Potential error! Algorithm %s took %d iterations to reach a tolerance of %.8e.\n", invif.name.c_str(), invif.iter, sqrt(invif.resSq)/bnorm);
+  }
+  printf("Computing [check] = A [lhs] as a confirmation.\n");
+  // Check and make sure we get the right answer.
+  square_laplacian_gauged(check, lhs, &lapstr);
+  explicit_resid = sqrt(diffnorm2sq(rhs, check, volume))/bnorm; // sqrt(|rhs - check|^2)/bnorm
+  printf("[check] should equal [rhs]. The residual is %15.20e.\n\n", explicit_resid);
+  
+
   /* BiCGstab */
   reset_vectors(rhs, lhs, check, length);
   invif = minv_vector_bicgstab(lhs, rhs, volume, max_iter, tol, square_laplacian_gauged, &lapstr);
