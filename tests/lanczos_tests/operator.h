@@ -41,13 +41,14 @@ public:
 template <typename T>
 class FunctionWrapper : public Operator<T> {
   friend Operator<T>;
+  typedef void (*MatrixOp)(T*,T*,void*);
 
 protected:
-  matrix_op_cplx fcn;
+  MatrixOp fcn;
   void* data;
 
 public:
-  FunctionWrapper(matrix_op_cplx fcn, void* data, int length)
+  FunctionWrapper(MatrixOp fcn, void* data, int length)
    : Operator<T>(length), fcn(fcn), data(data)
   { ; }
 
