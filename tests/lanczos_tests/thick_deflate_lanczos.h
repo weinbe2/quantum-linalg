@@ -10,6 +10,7 @@
 #include <random>
 #include <map>
 #include <functional>
+#include <algorithm>
 #include <Eigen/Dense>
 
 #include "blas/generic_vector.h"
@@ -105,9 +106,11 @@ public:
     delete[] Q;
 
     // deallocate all vectors
-    for (auto it = locked_eigs.begin(); it != locked_eigs.end(); ++it) {
-      deallocate_vector(&it->second);
-    }
+    std::for_each(locked_eigs.begin(), locked_eigs.end(),
+      [](const std::pair<T,std::complex<T>*>& eig_struct) { if (eig_struct.second != nullptr) deallocate_vector(&eig_struct.second); } );
+    //for (auto it = locked_eigs.begin(); it != locked_eigs.end(); ++it) {
+    //  deallocate_vector(&it->second);
+    //}
   }
 
   // Compute Ritz values
@@ -138,13 +141,6 @@ public:
     // Extra beta for restarts
     double beta_restart = 0.0;
 
-    // Storage for previous eigenvalues: needed for eigenvalue
-    // tolerance convergence check.
-    std::vector<T> prev_ritzvalues;
-    for (int i = 0; i < m; i++) {
-      prev_ritzvalues.push_back(static_cast<T>(1e20));
-    }
-
     // Let's goooo
     int iters = 0;
     bool converged = false;
@@ -174,10 +170,14 @@ public:
 
         // Optionally deflate
         if (deflate) {
-          for (auto it = locked_eigs.begin(); it != locked_eigs.end(); ++it) {
+          std::for_each(locked_eigs.begin(), locked_eigs.end(), 
+            [this](const std::pair<T,std::complex<T>*>& eig_struct) {
+              orthogonal(w, eig_struct.second, length);
+            });
+          /*for (auto it = locked_eigs.begin(); it != locked_eigs.end(); ++it) {
             complex<T> dotprod = dot(it->second, w, length);
             caxpy(-dotprod, it->second, w, length);
-          }
+          }*/
         }
 
         if (i > l) {
@@ -232,13 +232,9 @@ public:
       // Custom eigenstructure.
       // s_value is the `s` value needed for the restart
       // u_vector is the Ritz vector
-      // prev_ritz_value is used for the eigenvalue precision check.
-      //    if an eigenvalue is effectively unchanged from iteration to iteration,
-      //    we consider it converged independent of the residual
       struct Eigenset {
         std::complex<T> s_value;
         std::complex<T>* u_vector;
-        T prev_ritz_value;
       };
 
       // first element: Ritz value
@@ -281,7 +277,6 @@ public:
           for (int j = 0; j < m; j++) {
             caxpy(eigsolve_Tm.eigenvectors().col(i_idx)(j), Q[j], eset.u_vector, length);
           }
-          eset.prev_ritz_value = prev_ritzvalues[i_idx];
 
           candidate.insert(
             std::make_pair(eval,
@@ -289,12 +284,6 @@ public:
         } else {
           if (local_preserved_space < m) { local_preserved_space++; continue; } // give some more room to look
         }
-
-        // Save a back up. We use this to query
-        // if an eigenvalue is essentially unchanged from
-        // residual to residual.
-        prev_ritzvalues[i_idx] = eval;
-
         
       }
 
@@ -321,7 +310,6 @@ public:
         // otherwise
         std::cout << fabs(it->second.s_value/it->first) << "\n";
         if (fabs(it->second.s_value/it->first) < tol) {
-              //|| fabs((it->second.prev_ritz_value-it->first)/it->first) < 1e-13) {
           // We've got a lock!
           complex<double>* tmp = allocate_vector<complex<T>>(length);
           copy_vector(tmp, it->second.u_vector, length);

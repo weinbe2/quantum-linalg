@@ -67,6 +67,8 @@ inversion_info minv_vector_bicgstab(T *phi, T *phi0, int size, int max_iter, dou
   rho = dot(r0, r, size);
   
   // 2b. Initialize Ap.
+  zero_vector(Ap, size);
+
   (*matrix_vector)(Ap, p, extra_info); invif.ops_count++;
   
   // 3. iterate till convergence

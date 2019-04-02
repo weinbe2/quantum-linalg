@@ -49,6 +49,10 @@ template<typename T> inline void deallocate_vector(T** x)
   *x = 0;
 }
 
+template<typename T> inline void deallocate_vector(T* const * x)
+{
+  delete[] *x;
+}
 // Zeroes a vector.
 template<typename T> inline void zero_vector(T* x, int size)
 {
