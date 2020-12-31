@@ -308,7 +308,7 @@ public:
         cax(1.0/it->first, w, length);
         if (sqrt(diffnorm2sq(w, it->second.u_vector,length)) < tol ||*/
         // otherwise
-        std::cout << fabs(it->second.s_value/it->first) << "\n";
+        if (verbose) { std::cout << fabs(it->second.s_value/it->first) << "\n"; }
         if (fabs(it->second.s_value/it->first) < tol) {
           // We've got a lock!
           complex<double>* tmp = allocate_vector<complex<T>>(length);
@@ -327,7 +327,7 @@ public:
           l++;
         }
       }
-      std::cout << "Length: " << locked_eigs.size() << "\n\n";
+      if (verbose) { std::cout << "Length: " << locked_eigs.size() << "\n\n"; }
 
       // Clean up candidates
       for (auto it = candidate.begin(); it != candidate.end(); ++it) {

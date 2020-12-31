@@ -46,9 +46,9 @@ inversion_info minv_vector_cheby_iters(T *phi, T *phi0, int size, int max_iter, 
   Real alpha = 0.5*(lambda_min + lambda_max);
   Real c = 0.5*(lambda_max - lambda_min);
   Real cdiv2sq = 0.25*c*c; // needed in the alg
-  Real psi;
-  Real omega_old;
-  Real omega;
+  Real psi = 0;
+  Real omega_old = 0;
+  Real omega = 0;
 
   // More scalars.
   Real truersq, rsq, bsqrt;
@@ -67,25 +67,29 @@ inversion_info minv_vector_cheby_iters(T *phi, T *phi0, int size, int max_iter, 
   (*matrix_vector)(Av, x, extra_info); invif.ops_count++;
   caxpbyz(1.0, b, -1.0, Av, r, size);
 
-  // n = 0, explicitly unrolled.
-  k = 1;
-  psi = 0;
-  omega = 1.0/alpha;
-  copy_vector(v, r, size);
-  caxpy(omega, v, x, size);
-  zero_vector(Av, size);
-  (*matrix_vector)(Av, v, extra_info); invif.ops_count++;
-  caxpy(-omega, Av, r, size);
+  if (max_iter > 0) {
+    // n = 0, explicitly unrolled.
+    k = 1;
+    psi = 0;
+    omega = 1.0/alpha;
+    copy_vector(v, r, size);
+    caxpy(omega, v, x, size);
+    zero_vector(Av, size);
+    (*matrix_vector)(Av, v, extra_info); invif.ops_count++;
+    caxpy(-omega, Av, r, size);
+  }
 
   // n = 1, explicitly unrolled
-  k = 2;
-  psi = -0.5*c*c/(alpha*alpha);
-  omega = 1.0/(alpha + psi*alpha);
-  cxpay(r, -psi, v, size); // v = r - psi v
-  caxpy(omega, v, x, size); // x += omega v
-  zero_vector(Av, size);
-  (*matrix_vector)(Av, v, extra_info); invif.ops_count++;
-  caxpy(-omega, Av, r, size); // r -= omega A v
+  if (max_iter > 1) {
+    k = 2;
+    psi = -0.5*c*c/(alpha*alpha);
+    omega = 1.0/(alpha + psi*alpha);
+    cxpay(r, -psi, v, size); // v = r - psi v
+    caxpy(omega, v, x, size); // x += omega v
+    zero_vector(Av, size);
+    (*matrix_vector)(Av, v, extra_info); invif.ops_count++;
+    caxpy(-omega, Av, r, size); // r -= omega A v
+  }
 
   // Iterate for the rest
   for (k = 3; k <= max_iter; k++) {
